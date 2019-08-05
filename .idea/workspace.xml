@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="860c6dcd-808a-4694-a9ea-effcc258b456" name="Default Changelist" comment="" />
+    <list default="true" id="860c6dcd-808a-4694-a9ea-effcc258b456" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,7 +61,7 @@
         <entry file="file://$PROJECT_DIR$/../../tools/icebreaker/icebreaker.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="2495">
-              <caret line="825" lean-forward="true" selection-start-line="825" selection-end-line="825" />
+              <caret line="825" selection-start-line="825" selection-end-line="825" />
             </state>
           </provider>
         </entry>
@@ -82,6 +84,9 @@
       <find>responder</find>
     </findStrings>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -100,6 +105,7 @@
     <option name="width" value="1400" />
     <option name="height" value="1000" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -125,6 +131,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../pymetasploit3/pymetasploit3" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
@@ -173,7 +180,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.32901832" />
+      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.32937366" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.32901832" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -222,7 +229,7 @@
     <entry file="file://$PROJECT_DIR$/../../tools/icebreaker/icebreaker.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2495">
-          <caret line="825" lean-forward="true" selection-start-line="825" selection-end-line="825" />
+          <caret line="825" selection-start-line="825" selection-end-line="825" />
         </state>
       </provider>
     </entry>
