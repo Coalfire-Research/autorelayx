@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.70 scan initiated Mon Aug  5 16:28:16 2019 as: nmap -sS -n -&#45;max-retries 5 -p 445 -&#45;script smb-security-mode,smb2-security-mode -iL smb-unsigned-short.txt -oA smb-unsigned -->
+<nmaprun scanner="nmap" args="nmap -sS -n -&#45;max-retries 5 -p 445 -&#45;script smb-security-mode,smb2-security-mode -iL smb-unsigned-short.txt -oA smb-unsigned" start="1565044096" startstr="Mon Aug  5 16:28:16 2019" version="7.70" xmloutputversion="1.04">
+<scaninfo type="syn" protocol="tcp" numservices="1" services="445"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<host starttime="1565044096" endtime="1565044098"><status state="up" reason="reset" reason_ttl="121"/>
+<address addr="192.168.71.56" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="121"/><service name="microsoft-ds" method="table" conf="3"/></port>
+</ports>
+<hostscript><script id="smb2-security-mode" output="&#xa;  2.02: &#xa;    Message signing enabled but not required"><table key="2.02">
+<elem>Message signing enabled but not required</elem>
+</table>
+</script></hostscript><times srtt="14953" rttvar="11251" to="100000"/>
+</host>
+<host starttime="1565044096" endtime="1565044098"><status state="up" reason="echo-reply" reason_ttl="121"/>
+<address addr="192.168.71.57" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="121"/><service name="microsoft-ds" method="table" conf="3"/></port>
+</ports>
+<hostscript><script id="smb2-security-mode" output="&#xa;  2.02: &#xa;    Message signing enabled but not required"><table key="2.02">
+<elem>Message signing enabled but not required</elem>
+</table>
+</script></hostscript><times srtt="14400" rttvar="10958" to="100000"/>
+</host>
+<host starttime="1565044096" endtime="1565044098"><status state="up" reason="echo-reply" reason_ttl="125"/>
+<address addr="192.168.80.188" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="125"/><service name="microsoft-ds" method="table" conf="3"/></port>
+</ports>
+<hostscript><script id="smb-security-mode" output="&#xa;  account_used: guest&#xa;  authentication_level: user&#xa;  challenge_response: supported&#xa;  message_signing: disabled (dangerous, but default)"><elem key="account_used">guest</elem>
+<elem key="authentication_level">user</elem>
+<elem key="challenge_response">supported</elem>
+<elem key="message_signing">disabled</elem>
+</script><script id="smb2-security-mode" output="&#xa;  2.02: &#xa;    Message signing enabled but not required"><table key="2.02">
+<elem>Message signing enabled but not required</elem>
+</table>
+</script></hostscript><times srtt="375" rttvar="3754" to="100000"/>
+</host>
+<host starttime="1565044096" endtime="1565044098"><status state="up" reason="echo-reply" reason_ttl="125"/>
+<address addr="192.168.80.249" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="125"/><service name="microsoft-ds" method="table" conf="3"/></port>
+</ports>
+<hostscript><script id="smb-security-mode" output="&#xa;  account_used: guest&#xa;  authentication_level: user&#xa;  challenge_response: supported&#xa;  message_signing: disabled (dangerous, but default)"><elem key="account_used">guest</elem>
+<elem key="authentication_level">user</elem>
+<elem key="challenge_response">supported</elem>
+<elem key="message_signing">disabled</elem>
+</script><script id="smb2-security-mode" output="&#xa;  2.02: &#xa;    Message signing enabled but not required"><table key="2.02">
+<elem>Message signing enabled but not required</elem>
+</table>
+</script></hostscript><times srtt="379" rttvar="3773" to="100000"/>
+</host>
+<runstats><finished time="1565044098" timestr="Mon Aug  5 16:28:18 2019" elapsed="2.68" summary="Nmap done at Mon Aug  5 16:28:18 2019; 6 IP addresses (4 hosts up) scanned in 2.68 seconds" exit="success"/><hosts up="4" down="2" total="6"/>
+</runstats>
+</nmaprun>
