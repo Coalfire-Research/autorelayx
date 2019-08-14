@@ -20,6 +20,7 @@ def parse_args():
     #parser.add_argument("-p", "--privexchange", action='store_true', help="Remote command to run upon successful NTLM relay")
     return parser.parse_args()
 
+
 def nmap_status(nmap):
     """
     Prints status of Nmap process

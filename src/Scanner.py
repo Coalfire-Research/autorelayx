@@ -3,9 +3,6 @@
 from netaddr import IPNetwork, AddrFormatError
 from libnmap.parser import NmapParser
 from libnmap.process import NmapProcess
-from src.Logger import *
-import sys
-import time
 
 
 class NmapError(Exception):
