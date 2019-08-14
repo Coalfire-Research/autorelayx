@@ -1,0 +1,3 @@
+[submodule "submodules/Responder"]
+	path = submodules/Responder
+	url = https://github.com/lgandx/Responder
