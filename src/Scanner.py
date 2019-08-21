@@ -14,7 +14,6 @@ class NmapError(Exception):
 
 class Nmap:
 
-
     def __init__(self):
 
         self.report = None
