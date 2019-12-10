@@ -29,5 +29,25 @@ async def get_unsigned_hosts(loop, hosts):
         fs=[loop.run_in_executor(executor, get_smb_signing, host, 445) for host in hosts],
         return_when=asyncio.ALL_COMPLETED
     )
-    results = list(filter(None, ([task.result() for task in done]))) # Filter None from list
-    return results
+    hosts = list(filter(None, ([task.result() for task in done]))) # Filter None from list
+    write_unsigned_hosts(hosts)
+    return hosts
+
+def write_unsigned_hosts(hosts):
+    if len(hosts) > 0:
+        old_lines = None
+        filename = 'unsigned-smb-hosts.txt'
+        if os.path.isfile(filename):
+            f = open(filename, 'r')
+            old_lines = f.readlines()
+            f.close()
+
+        for host in hosts:
+            host = host + '\n'
+            if old_lines:
+                if host not in old_lines:
+                    with open(filename, 'a+') as f:
+                        f.write(data)
+            else:
+                with open(filename, 'a+') as f:
+                    f.write(data)

@@ -49,7 +49,6 @@ def follow_file(thefile):
             continue
         yield line
 
-
 def print_bad(msg):
     print(colored('[-] ', 'red') + msg)
 

