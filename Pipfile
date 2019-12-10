@@ -9,6 +9,7 @@ verify_ssl = true
 termcolor = "*"
 netaddr = "*"
 python-libnmap = "*"
+netifaces = "*"
 
 [requires]
 python_version = "3.7"

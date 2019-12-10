@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
-class Responder:
+from src.process import Program
 
+class Responder(Program):
 
-    def edit_conf(self, switch, protocols, conf):
+    def __init__(self, cmd):
+        super().__init__()
+        self.cmd = cmd
+
+    def edit_resp_conf(self, switch, protocols, conf):
         """
-        Edit responder.conf
+        Edit Responder.conf
+
+        Mandatory arguments:
+        - switch : string of On or Off
+        - protocols : the protocols to change, e.g., HTTP, SMB, POP, IMAP
+        - conf : the Responder.conf config file location
         """
         if switch == 'On':
             opp_switch = 'Off'
@@ -19,11 +29,3 @@ class Responder:
                 filedata = filedata.replace(p + ' = ' + opp_switch, p + ' = ' + switch)
         with open(conf, 'w') as f:
             f.write(filedata)
-
-
-    def start(self, iface):
-        """Start Responder alone for LLMNR attack"""
-#        edit_conf('On', ['HTTP', 'SMB'])
-        resp_cmd = '{}/submodules/Responder/Responder.py -wrd -I {}'.format(os.getcwd(), iface)
-        return resp_proc
-

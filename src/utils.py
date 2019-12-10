@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import netifaces
-from src.Logger import *
+from termcolor import colored
 
 
 def get_iface():
@@ -48,3 +48,18 @@ def follow_file(thefile):
             time.sleep(0.1)
             continue
         yield line
+
+
+def print_bad(msg):
+    print(colored('[-] ', 'red') + msg)
+
+
+def print_info(msg):
+    print(colored('[*] ', 'blue') + msg)
+
+
+def print_good(msg):
+    print(colored('[+] ', 'green') + msg)
+
+def print_great(msg):
+    print(colored('[!] {}'.format(msg), 'yellow', attrs=['bold']))
