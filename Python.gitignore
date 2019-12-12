@@ -1,9 +1,3 @@
-hashes/*
-nocommit/
-unsigned-smb-hosts.txt
-logs/*
-arp.cache
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
