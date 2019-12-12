@@ -49,8 +49,7 @@ def parse_hostlist(hostlist):
 async def main():
 
     if not args.target:
-    #   hostlist = args.hostlist
-        hostlist = '/home/dan/PycharmProjects/autorelayx/nocommit/home.txt'
+        hostlist = args.hostlist
         hosts = parse_hostlist(hostlist)
         unsigned_hosts = await get_unsigned_hosts(loop, hosts)
 
@@ -65,6 +64,7 @@ async def main():
     # Start Responder
     responder = start_responder(args.interface)
     print_info(f"Running: {responder.cmd}")
+
     # Start ntlmrelayx
     ntlmrelayx = start_ntlmrelayx(args)
     print_info(f"Running: {ntlmrelayx.cmd}")
