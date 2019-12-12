@@ -58,7 +58,9 @@ async def main():
             print_bad('No hosts with SMB signing disabled found')
             sys.exit()
 
-        print(unsigned_hosts)
+        print_good('Unsigned SMB hosts:')
+        for h in unsigned_hosts:
+            print_good('  '+h)
 
     # Start Responder
     responder = start_responder(args.interface)
@@ -88,7 +90,10 @@ async def main():
             print_info('Killing mitm6, may take a minute')
             mitm6.kill()
         time.sleep(5)
-        os.remove(f'{cwd}/arp.cache')
+        try:
+            os.remove(f'{cwd}/arp.cache')
+        except FileNotFoundError:
+            pass
         print_good('Done')
         sys.exit()
 

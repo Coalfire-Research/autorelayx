@@ -18,7 +18,7 @@ def get_smb_signing(host, port):
             if not conn.isSigningRequired():
                 return host
         except Exception as e:
-            print(str(e))
+#            print(str(e))
             return
 
 async def get_unsigned_hosts(loop, hosts):
