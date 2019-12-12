@@ -3,7 +3,7 @@ nocommit/
 unsigned-smb-hosts.txt
 arp.cache
 .idea/
-logs/*.log
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
