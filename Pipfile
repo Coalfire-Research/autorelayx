@@ -8,8 +8,9 @@ verify_ssl = true
 [packages]
 termcolor = "*"
 netaddr = "*"
-python-libnmap = "*"
 netifaces = "*"
+twisted = "*"
+scapy = "*"
 
 [requires]
 python_version = "3.7"

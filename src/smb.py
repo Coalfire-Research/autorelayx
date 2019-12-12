@@ -2,6 +2,7 @@ from impacket.smbconnection import SMBConnection
 from impacket.smb import SMB_DIALECT
 import concurrent.futures
 import asyncio
+import os
 
 def get_smb_signing(host, port):
     """
@@ -47,7 +48,7 @@ def write_unsigned_hosts(hosts):
             if old_lines:
                 if host not in old_lines:
                     with open(filename, 'a+') as f:
-                        f.write(data)
+                        f.write(host)
             else:
                 with open(filename, 'a+') as f:
-                    f.write(data)
+                    f.write(host)

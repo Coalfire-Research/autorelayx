@@ -2,6 +2,7 @@
 
 import netifaces
 from termcolor import colored
+import time
 
 
 def get_iface():
@@ -49,6 +50,7 @@ def follow_file(thefile):
             continue
         yield line
 
+
 def print_bad(msg):
     print(colored('[-] ', 'red') + msg)
 
@@ -59,6 +61,7 @@ def print_info(msg):
 
 def print_good(msg):
     print(colored('[+] ', 'green') + msg)
+
 
 def print_great(msg):
     print(colored('[!] {}'.format(msg), 'yellow', attrs=['bold']))
