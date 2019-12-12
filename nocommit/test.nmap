@@ -1,8 +1,0 @@
-# Nmap 7.70 scan initiated Mon Aug  5 15:27:33 2019 as: nmap -oA test -sS -p 80 127.0.0.1
-Nmap scan report for localhost (127.0.0.1)
-Host is up (0.000031s latency).
-
-PORT   STATE  SERVICE
-80/tcp closed http
-
-# Nmap done at Mon Aug  5 15:27:33 2019 -- 1 IP address (1 host up) scanned in 0.11 seconds
