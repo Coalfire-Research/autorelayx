@@ -95,6 +95,12 @@ def start_process(cmd, logfile_name):
 
     return proc
 
+# def start_scanMic(args):
+#     cmd = f'python {cwd}/submodules/cve-2019-1040-scanner/scan.py -target-file exchange-servers.txt {creds}'
+#     logfile_name = 'scanMic'
+#     scanMic = start_process(cmd, logfile_name)
+#
+#     return scanMic
 
 # regular
 'python {}/submodules/ntlmrelayx.py -tf smb-unsigned-hosts.txt -of {}/hashes-ntlmrelay-hashes -smb2support'
