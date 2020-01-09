@@ -4,6 +4,7 @@ unsigned-smb-hosts.txt
 arp.cache
 .idea/
 *.log
+*.swp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
