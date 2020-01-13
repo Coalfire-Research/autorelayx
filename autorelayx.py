@@ -9,6 +9,7 @@ from src.utils import *
 from src.tools import *
 from src.smb import get_unsigned_hosts
 from netaddr import IPNetwork, AddrFormatError
+from signal import SIGINT
 
 def parse_args():
     # Create the arguments
@@ -74,14 +75,13 @@ async def main():
         mitm6 = start_mitm6(args)
         print_info(f"Running: {mitm6.cmd}")
 
-    ########## CTRL-C HANDLER ##############################
+     ########## CTRL-C HANDLER ##############################
     def signal_handler(signal, frame):
         """
         Catch CTRL-C and kill procs
         """
         print_info('CTRL-C caught, cleaning up and closing')
-
-        # Kill procs
+         # Kill procs
         print_info('Killing Responder')
         responder.kill()
         print_info('Killing ntlmrelayx')
@@ -104,18 +104,18 @@ async def main():
     file_lines = follow_file(ntlmrelay_file)
     for line in file_lines:
         print('    '+line.strip())
-
+    return
 
 if __name__ == "__main__":
 
-        if os.geteuid():
-            print_bad('Run as root')
-            sys.exit()
+    if os.geteuid():
+        print_bad('Run as root')
+        sys.exit()
 
-        args = parse_args()
-        loop = asyncio.get_event_loop()
-        try:
-            loop.run_until_complete(main())
-        except KeyboardInterrupt:
-            print("Received exit, exiting")
-        loop.close()
+    args = parse_args()
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        print("Received exit, exiting")
+    loop.close()

