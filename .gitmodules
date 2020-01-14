@@ -1,6 +1,6 @@
-[submodule "submodules/Responder"]
-	path = submodules/Responder
+[submodule "tools/Responder"]
+	path = tools/Responder
 	url = https://github.com/lgandx/Responder
-[submodule "submodules/cve-2019-1040-scanner"]
-	path = submodules/cve-2019-1040-scanner
+[submodule "tools/cve-2019-1040-scanner"]
+	path = tools/cve-2019-1040-scanner
 	url = https://github.com/fox-it/cve-2019-1040-scanner
