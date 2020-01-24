@@ -84,7 +84,7 @@ if __name__ == '__main__':
         password = ''
         domain = 'lab.local'
         dc = '172.30.23.100'
-        search_filter = "(servicePrincipalName=*exchange*)"
+        search_filter = "(servicePrincipalName=*WIN*)"
         attribute = "dNSHostName"
         executer = SearchLDAP(user, password, domain, dc, attribute, search_filter=search_filter)
         attributes = executer.run()
