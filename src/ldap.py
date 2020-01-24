@@ -62,18 +62,20 @@ class SearchLDAP:
 
         logging.debug('Total of records returned %d' % len(resp))
 
+        attributes = []
         for item in resp:
             if isinstance(item, ldapasn1.SearchResultEntry) is not True:
                 continue
             try:
                 for attribute in item['attributes']:
                     if str(attribute['type']) == self.__print_attribute:
-                        print(attribute['vals'][0])
+                        attributes.append(attribute['vals'][0])
 
             except Exception as e:
                 logging.error('Skipping item, cannot process due to error %s' % str(e))
                 pass
 
+        return attributes
 
 # Process command-line arguments.
 if __name__ == '__main__':
@@ -82,10 +84,11 @@ if __name__ == '__main__':
         password = ''
         domain = 'lab.local'
         dc = '172.30.23.100'
-        search_filter = "(servicePrincipalName=*WIN*)"
+        search_filter = "(servicePrincipalName=*exchange*)"
         attribute = "dNSHostName"
         executer = SearchLDAP(user, password, domain, dc, attribute, search_filter=search_filter)
-        executer.run()
+        attributes = executer.run()
+        print(attributes)
     except Exception as e:
         if logging.getLogger().level == logging.DEBUG:
             import traceback
