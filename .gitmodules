@@ -4,3 +4,9 @@
 [submodule "tools/cve-2019-1040-scanner"]
 	path = tools/cve-2019-1040-scanner
 	url = https://github.com/fox-it/cve-2019-1040-scanner
+[submodule "tools/krbrelayx"]
+	path = tools/krbrelayx
+	url = https://github.com/dirkjanm/krbrelayx
+[submodule "tools/mitm6"]
+	path = tools/mitm6
+	url = https://github.com/fox-it/mitm6

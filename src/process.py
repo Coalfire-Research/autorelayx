@@ -2,8 +2,8 @@
 
 from subprocess import Popen, PIPE, STDOUT, call
 import os
-import time
 import signal
+from src.utils import *
 
 
 class ProgramError(Exception):
@@ -17,7 +17,6 @@ class ProgramError(Exception):
 class Process:
 
     def __init__(self, cmd):
-        self.proc = None
         self.cmd = cmd
         if '"' in self.cmd: # for commands like ntlmrelayx that may have secondary commands in them
             dquote_split = cmd.split('"')
@@ -27,18 +26,23 @@ class Process:
         else:
             self.cmd_split = cmd.split()
 
-    def run(self, logfile=None):
+    def run(self, logfile, live_output=False):
         """
         Run a program and log output
         """
-        out = PIPE
-        if logfile:
-            out = open(logfile, 'a+')
+        self.logfile = logfile
+        log = open(logfile, "w+")
 
-        self.proc = Popen(self.cmd_split, stdout=out, stderr=out)
+        self.proc = Popen(self.cmd_split, stdout=log, stderr=log, universal_newlines=True)
 
+        try:
+            if live_output == True:
+                self.read_live(logfile)
+        except KeyboardInterrupt:
+            pass
+
+        log.close()
         return self.proc
-
 
     def kill(self, wait_time=0):
         """
@@ -59,6 +63,29 @@ class Process:
 
         raise ProgramError(f"PID {self.proc.pid} failed to shut down cleanly")
 
+    def read_live(self, filename):
+        self.stdout = []
+        log = open(filename, "r+")
+        file_lines = self.follow_file(log)
+        for line in file_lines:
+            line = line.strip()
+            self.stdout.append(line)
+            print('    ' + line)
+
+    def follow_file(self, log):
+        """
+        Works like tail -f
+        Follows a constantly updating file
+        """
+        log.seek(0, 2)
+        while self.proc.poll() == None:
+            line = log.readline()
+            if not line:
+                time.sleep(0.1)
+                continue
+            yield line
+
+        log.close()
 
     @property
     def pid(self):
