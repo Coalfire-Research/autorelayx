@@ -38,12 +38,9 @@ def get_iface_and_ip(args):
     return iface, local_ip
 
 def parse_creds(args):
-    user_and_host = args.user.rsplit('@', 1)
-    dom_user_pass = user_and_host[0]
-    host = user_and_host[1]
-    dom, user_pass = dom_user_pass.split('/', 1)
-    user, passwd = user_pass.split(":", 1)
-    return dom, user, passwd, host
+    dom, userpass = args.user.split("/", 1)
+    user, passwd = userpass.split(":", 1)
+    return dom, user, passwd
 
 def get_local_ip(iface):
     """

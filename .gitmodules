@@ -10,3 +10,6 @@
 [submodule "tools/mitm6"]
 	path = tools/mitm6
 	url = https://github.com/fox-it/mitm6
+[submodule "tools/PrivExchange"]
+	path = tools/PrivExchange
+	url = https://github.com/dirkjanm/PrivExchange

