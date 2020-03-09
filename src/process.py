@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-from subprocess import Popen, PIPE, STDOUT, call
+from subprocess import Popen
 import os
 import signal
 from src.utils import *
+from autorelayx import cleanup
 
 
 class ProgramError(Exception):
@@ -16,8 +17,11 @@ class ProgramError(Exception):
 
 class Process:
 
-    def __init__(self, cmd):
+    def __init__(self, cmd, name):
         self.cmd = cmd
+        self.escalation_successful = False
+        self.name = name
+        self.stdout = []
         if '"' in self.cmd: # for commands like ntlmrelayx that may have secondary commands in them
             dquote_split = cmd.split('"')
             self.cmd_split = dquote_split[0].split()
@@ -26,23 +30,39 @@ class Process:
         else:
             self.cmd_split = cmd.split()
 
+    def gather_remaining_output(self):
+        with open(self.logfile, 'r+') as f:
+            lines = f.readlines()
+            stripped_lines = []
+            for l in lines:
+                stripped_lines.append(l.strip())
+            if stripped_lines != self.stdout:
+                new_output = (list(set(stripped_lines) - set(self.stdout)))
+                for l in new_output:
+                    self.stdout += l
+                    print('    '+l)
+
     def run(self, logfile, live_output=False):
         """
         Run a program and log output
         """
         self.logfile = logfile
         log = open(logfile, "w+")
-
+        self.logfile_obj = log
         self.proc = Popen(self.cmd_split, stdout=log, stderr=log, universal_newlines=True)
 
         try:
             if live_output == True:
-                self.read_live(logfile)
+                self.read_live()
         except KeyboardInterrupt:
             pass
+        #     self.logfile_obj.close()
+        #     self.gather_remaining_output()
+        #
+        # if live_output == True:
+        #     self.gather_remaining_output()
 
-        log.close()
-        return self.proc
+        return self
 
     def kill(self, wait_time=0):
         """
@@ -52,6 +72,7 @@ class Process:
             raise ProgramError("Cannot get PID, no program running")
 
         os.kill(self.proc.pid, signal.SIGINT)
+        self.logfile_obj.close()
         time.sleep(wait_time)
         self.proc.communicate()  # Prevent defunct processes
 
@@ -63,14 +84,16 @@ class Process:
 
         raise ProgramError(f"PID {self.proc.pid} failed to shut down cleanly")
 
-    def read_live(self, filename):
-        self.stdout = []
-        log = open(filename, "r+")
+    def read_live(self):
+        log = open(self.logfile, "r+")
         file_lines = self.follow_file(log)
         for line in file_lines:
             line = line.strip()
             self.stdout.append(line)
             print('    ' + line)
+
+            # Custom code
+            self.parse_output(line)
 
     def follow_file(self, log):
         """
@@ -83,9 +106,8 @@ class Process:
             if not line:
                 time.sleep(0.1)
                 continue
-            yield line
 
-        log.close()
+            yield line
 
     @property
     def pid(self):
@@ -93,3 +115,11 @@ class Process:
             raise ProgramError("Cannot get PID, no program running")
         return self.proc.pid
 
+    # Custom parsing for autorelayx
+    def parse_output(self, line):
+        if 'Try using DCSync with secretsdump.py and this user' in line:
+            self.escalation_successful = True
+            print_good('Success! Dumping DC with secretsdump')
+            print_info('Killing ntlmrelayx')
+            self.logfile_obj.close()
+            self.kill()

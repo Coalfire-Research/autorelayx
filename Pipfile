@@ -11,7 +11,7 @@ netaddr = "*"
 netifaces = "*"
 twisted = "*"
 scapy = "*"
-impacket = "*"
+service-identity = "*"
 
 [requires]
 python_version = "3.7"

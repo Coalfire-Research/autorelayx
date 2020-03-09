@@ -13,3 +13,6 @@
 [submodule "tools/PrivExchange"]
 	path = tools/PrivExchange
 	url = https://github.com/dirkjanm/PrivExchange
+[submodule "tools/impacket"]
+	path = tools/impacket
+	url = https://github.com/SecureAuthCorp/impacket
