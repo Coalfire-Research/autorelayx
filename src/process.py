@@ -116,8 +116,7 @@ class Process:
 
     # Custom parsing for autorelayx
     def parse_output(self, line):
-        #if 'Try using DCSync with secretsdump.py and this user' in line:
-        if "connections" in line:
+        if 'Try using DCSync with secretsdump.py and this user' in line:
             self.escalation_successful = True
             print_good('Success! Dumping DC with secretsdump')
             print_info('Killing ntlmrelayx')
