@@ -34,8 +34,8 @@ SMB relay with a custom command and without checking SMB signing.
 ```python autorelayx.py -tf <targets_file.txt> -c <"net user /add danmcinerney P@ssword123456">```
 
 ## IPv6 poisoning
-This will run ntlmrelayx, Responder, and mitm6. The -i argument is optional and specifies the interface to use for both 
-Responder and mitm6. It is optional but suggested to use the -d <domain> argument to limit mitm6's responses.
+This will run ntlmrelayx, Responder, and mitm6. The -i <interface> argument is optional and specifies the interface to use for both 
+Responder and mitm6. The -d <domain> is optional but suggested to use to limit mitm6's responses.
 
 ```python autorelayx.py -l <hostlist.txt> -6 -d <domain for mitm6 to poison> -i <interface>```
 
