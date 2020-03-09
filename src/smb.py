@@ -3,6 +3,7 @@ from impacket.smb import SMB_DIALECT
 import concurrent.futures
 import asyncio
 import os
+from src.utils import print_good
 
 def get_smb_signing(host, port):
     """
@@ -14,18 +15,17 @@ def get_smb_signing(host, port):
             return host
     except Exception as e:
         try: #SMBv3
-            conn = SMBConnection(host, host, None, port, timeout=10)
+            conn = SMBConnection(host, host, None, port, timeout=15)
             if not conn.isSigningRequired():
                 return host
         except Exception as e:
-#            print(str(e))
             return
 
 async def get_unsigned_hosts(loop, hosts):
     """
     Returns list of hosts without SMB signing
     """
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=128)
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=64)
     done, pending = await asyncio.wait(
         fs=[loop.run_in_executor(executor, get_smb_signing, host, 445) for host in hosts],
         return_when=asyncio.ALL_COMPLETED

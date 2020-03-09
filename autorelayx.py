@@ -119,7 +119,7 @@ def check_args(args):
     elif args.httpattack:
         if not args.exchange_server:
             print_bad("Missing -e <exchange server> argument")
-        sys.exit()
+            sys.exit()
 
     elif not args.hostlist or not args.target_file:
         print_bad("Missing arguments check README.md for examples; minimum arguments are either -l <hostlist.txt> or -tf <targets_file.txt> for simple SMB relay attack")
