@@ -110,32 +110,6 @@ async def relay_attacks(args, iface):
 
     return responder, mitm6
 
-def cleanup(procs):
-    """
-    Catch CTRL-C and kill procs
-    """
-    cwd = os.getcwd()
-    slow_msg = ''
-
-    for p in procs:
-        # exchange_scanner is supposed to be dead after running
-        if p and p.name != "exchange_scanner":
-            if p.name == 'mitm6':
-                slow_msg = ', this may take a minute'
-            print_info(f'Killing {p.name}{slow_msg}')
-
-            try:
-                p.kill()
-            except ProcessLookupError:
-                print_info(f'{p.name} already dead may have errored on start, check autorelayx/logos/{p.name} files')
-
-    try:
-        os.remove(f'{cwd}/arp.cache')
-    except FileNotFoundError:
-        pass
-
-    time.sleep(3)
-
 def check_args(args):
     if args.privexchange or args.printerbug:
         if not args.exchange_server or not args.user or not args.domain_controller:
@@ -150,6 +124,37 @@ def check_args(args):
     elif not args.hostlist or not args.target_file:
         print_bad("Missing arguments check README.md for examples; minimum arguments are either -l <hostlist.txt> or -tf <targets_file.txt> for simple SMB relay attack")
         sys.exit()
+
+def cleanup(procs):
+    """
+    Catch CTRL-C and kill procs
+    """
+    cwd = os.getcwd()
+    slow_msg = ''
+
+    for p in procs:
+        # exchange_scanner and secretsdump are supposed to be dead after running
+        # But why does ntlmrelayx exit before we call .kill() on it?
+        # Something to do with the file object we open and close in stdout?
+        if p:
+            if p.name not in ['exchange_scanner', 'secretsdump', 'ntlmrelayx']:
+
+                if p.name == 'mitm6':
+                    slow_msg = ', this may take a minute'
+
+                print_info(f'Killing {p.name}{slow_msg}')
+
+                try:
+                    p.kill()
+                except ProcessLookupError:
+                    print_info(f'{p.name} already dead may have errored on start, check autorelayx/logs/{p.name}.log files')
+
+    try:
+        os.remove(f'{cwd}/arp.cache')
+    except FileNotFoundError:
+        pass
+
+    time.sleep(3)
 
 async def main():
     check_args(args)

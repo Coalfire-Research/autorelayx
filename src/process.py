@@ -55,12 +55,11 @@ class Process:
             if live_output == True:
                 self.read_live()
         except KeyboardInterrupt:
-            pass
-        #     self.logfile_obj.close()
-        #     self.gather_remaining_output()
-        #
-        # if live_output == True:
-        #     self.gather_remaining_output()
+            self.logfile_obj.close()
+            self.gather_remaining_output()
+
+        if live_output == True:
+            self.gather_remaining_output()
 
         return self
 
@@ -117,7 +116,8 @@ class Process:
 
     # Custom parsing for autorelayx
     def parse_output(self, line):
-        if 'Try using DCSync with secretsdump.py and this user' in line:
+        #if 'Try using DCSync with secretsdump.py and this user' in line:
+        if "connections" in line:
             self.escalation_successful = True
             print_good('Success! Dumping DC with secretsdump')
             print_info('Killing ntlmrelayx')
