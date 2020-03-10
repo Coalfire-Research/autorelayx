@@ -4,6 +4,7 @@ from subprocess import Popen
 import os
 import signal
 from src.utils import *
+from signal import SIGINT
 from autorelayx import cleanup
 
 
@@ -70,10 +71,10 @@ class Process:
         if not self.proc:
             raise ProgramError("Cannot get PID, no program running")
 
-        os.kill(self.proc.pid, signal.SIGINT)
+        self.proc.communicate()  # Prevent defunct processes
+        self.proc.send_signal(SIGINT)
         self.logfile_obj.close()
         time.sleep(wait_time)
-        self.proc.communicate()  # Prevent defunct processes
 
         # Confirm the proc is dead
         try:

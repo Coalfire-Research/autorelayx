@@ -111,18 +111,23 @@ async def relay_attacks(args, iface):
     return responder, mitm6
 
 def check_args(args):
+    msg = None
+
     if args.privexchange or args.printerbug:
         if not args.exchange_server or not args.user or not args.domain_controller:
-            print_bad("Incorrect arguments for PrivExchange or PrinterBug attack, necessary args: -e <exchange server> -u <DOM/user:password> -dc <domain controller IP/hostname>")
-            sys.exit()
+            msg = ("Incorrect arguments for PrivExchange or PrinterBug attack, necessary args: -e <exchange server> "
+                      "-u <DOM/user:password> -dc <domain controller IP/hostname>")
 
     elif args.httpattack:
         if not args.exchange_server:
-            print_bad("Missing -e <exchange server> argument")
-            sys.exit()
+            msg = ("Missing -e <exchange server> argument")
 
-    elif not args.hostlist or not args.target_file:
-        print_bad("Missing arguments check README.md for examples; minimum arguments are either -l <hostlist.txt> or -tf <targets_file.txt> for simple SMB relay attack")
+    elif not args.hostlist and not args.target_file:
+        msg = ("Missing arguments check README.md for examples; minimum arguments are either -l <hostlist.txt> or "
+                  "-tf <targets_file.txt> for simple SMB relay attack")
+
+    if msg:
+        print_bad(msg)
         sys.exit()
 
 def cleanup(procs):
@@ -159,7 +164,12 @@ def cleanup(procs):
 async def main():
     check_args(args)
     procs = []
-    iface, local_ip = get_iface_and_ip(args)
+
+    try:
+        iface, local_ip = get_iface_and_ip(args)
+    except Exception as e:
+        print_bad(str(e))
+        sys.exit()
 
     if any([args.privexchange, args.printerbug]):
         printerbug, privexchange, scan = exchange_attacks(args, local_ip)
