@@ -2,10 +2,8 @@
 
 from subprocess import Popen
 import os
-import signal
 from src.utils import *
 from signal import SIGINT
-from autorelayx import cleanup
 
 
 class ProgramError(Exception):
@@ -78,7 +76,7 @@ class Process:
 
         # Confirm the proc is dead
         try:
-            print(os.kill(self.proc.pid, 0))
+            print(os.kill(self.pid, 0))
         except ProcessLookupError:
             return True
 

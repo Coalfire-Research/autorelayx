@@ -41,8 +41,8 @@ def parse_creds(args):
     colon_split = args.user.split(':', 1) # dom/user, pass
     passwd = colon_split[1]
     slash_split = colon_split[0].split("/", 1)
-    dom = slash_split[0]
-    user = slash_split[1]
+    dom = slash_split[0].strip()
+    user = slash_split[1].strip()
 
     return dom, user, passwd
 

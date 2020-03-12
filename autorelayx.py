@@ -8,9 +8,9 @@ from src.tools import *
 from src.smb import get_unsigned_hosts
 from netaddr import IPNetwork, AddrFormatError
 
-def parse_args():
+def parse_args(args):
     # Create the arguments
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(args)
     parser.add_argument("-l", "--hostlist", help="Host list file")
     parser.add_argument("-i", "--interface", help="Interface to use with Responder")
     parser.add_argument("-c", "--command", help="Remote command to run upon successful NTLM relay")
@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument("--privexchange", action="store_true", help="Perform PrivExchange attack")
     parser.add_argument("--printerbug", action="store_true", help="Perform printerbug attack")
     parser.add_argument("--httpattack", action="store_true", help="Perform PrivExchange without authentication")
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 def parse_hostlist(hostlist):
     """
@@ -102,7 +102,8 @@ async def relay_attacks(args, iface):
                 print_good('  ' + h)
 
     # Start Responder
-    responder = start_responder(iface)
+    conf = os.getcwd() + '/tools/Responder/Responder.conf'
+    responder = start_responder(iface, conf)
 
     # Start mitm6
     if args.mitm6:
@@ -201,7 +202,7 @@ if __name__ == "__main__":
         print_bad('Run as root')
         sys.exit()
 
-    args = parse_args()
+    args = parse_args(sys.argv[1:])
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
     loop.close()

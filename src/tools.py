@@ -75,10 +75,9 @@ def edit_responder_conf(switch, protocols, conf):
     with open(conf, 'w') as f:
         f.write(filedata)
 
-def start_responder(iface):
+def start_responder(iface, conf):
     protocols = ['HTTP', 'SMB']
     switch = 'Off'
-    conf = 'tools/Responder/Responder.conf'
     edit_responder_conf(switch, protocols, conf)
     cmd = f'python2 {cwd}/tools/Responder/Responder.py -wrd -I {iface}'
 

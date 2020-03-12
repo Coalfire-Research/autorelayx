@@ -6,6 +6,7 @@ arp.cache
 *.log
 *.swp
 logs/*
+test/logs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

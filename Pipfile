@@ -12,6 +12,7 @@ netifaces = "*"
 twisted = "*"
 scapy = "*"
 service-identity = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.7"
