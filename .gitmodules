@@ -1,6 +1,3 @@
-[submodule "tools/Responder"]
-	path = tools/Responder
-	url = https://github.com/lgandx/Responder
 [submodule "tools/krbrelayx"]
 	path = tools/krbrelayx
 	url = https://github.com/dirkjanm/krbrelayx
