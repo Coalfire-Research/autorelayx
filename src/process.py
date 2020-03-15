@@ -119,5 +119,7 @@ class Process:
             self.escalation_successful = True
             print_good('Success! Dumping DC with secretsdump')
             print_info('Killing ntlmrelayx')
-            self.logfile_obj.close()
+            self.kill()
+        elif 'can now impersonate users on' in line:
+            print_good('Success! Use getST.py from impacket to impersonate a user')
             self.kill()

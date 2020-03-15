@@ -117,7 +117,7 @@ def test_start_printerbug():
 
 def test_start_exchange_scan():
     args = parse_args(['-e', '1.1.1.1', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
-    scan = start_exchange_scan(args)
+    scan = start_printerbug_scan(args)
     assert int(scan.proc.pid)
     print('Scan PID: ' + str(scan.pid))
     assert '1.1.1.1' in scan.cmd
