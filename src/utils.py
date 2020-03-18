@@ -37,14 +37,23 @@ def get_iface_and_ip(args):
 
     return iface, local_ip
 
-def parse_creds(args):
-    colon_split = args.user.split(':', 1) # dom/user, pass
-    passwd = colon_split[1]
-    slash_split = colon_split[0].split("/", 1)
-    dom = slash_split[0].strip()
-    user = slash_split[1].strip()
+def parse_creds(creds):
+    if ':' in creds:
+        colon_split = creds.split(':', 1) # dom/user, pass
+        password = colon_split[1]
+        creds = colon_split[0]
+    else:
+        password = ''
 
-    return dom, user, passwd
+    if '/' in creds:
+        slash_split = creds.split("/", 1)
+        dom = slash_split[0].strip()
+        user = slash_split[1].strip()
+    else:
+        dom = ''
+        user = creds
+
+    return dom, user, password
 
 def get_local_ip(iface):
     """

