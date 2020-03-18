@@ -116,7 +116,7 @@ def start_mic_scan(args):
     elif args.server:
         cmd = f"python {cwd}/tools/cve-2019-1040-scanner/scan.py {args.user}@{args.server}"
 
-    name = "printerbug_scanner"
+    name = "mic_scanner"
     scan = start_process(cmd, name, live_output=True)
 
     return scan

@@ -33,29 +33,29 @@ def test_start_responder():
 
 def test_create_ntlmrelayx_cmd():
     privex_args = parse_args(
-        ['--privexchange', '--httpattack', '--printerbug', '-e', '1.1.1.1', '-dc', '2.2.2.2', '-u',
+        ['--privexchange', '--httpattack', '--remove-mic', '-s', '1.1.1.1', '-dc', '2.2.2.2', '-u',
          'DOMAIN/user:P@$/!s/:w0rd', '-6', '-d', 'domain', '-i', 'eth0'])
     relay_cmd = create_ntlmrelayx_cmd(privex_args)
     assert '--escalate-user' in relay_cmd
     assert '-t ldap://2.2.2.2' in relay_cmd
     assert '-6' in relay_cmd
-    printerbug_args = parse_args(
-        ['--printerbug', '--httpattack', '--printerbug', '-e', '1.1.1.1', '-dc', '2.2.2.2', '-u',
+    remove_mic_args = parse_args(
+        ['--remove-mic', '--httpattack', '--remove-mic', '-s', '1.1.1.1', '-dc', '2.2.2.2', '-u',
          'DOMAIN/user:P@$/!s/:w0rd', '-6', '-d', 'domain', '-i', 'eth0'])
-    relay_cmd = create_ntlmrelayx_cmd(printerbug_args)
+    relay_cmd = create_ntlmrelayx_cmd(remove_mic_args)
     assert '--escalate-user user' in relay_cmd
     assert '-t ldap://2.2.2.2' in relay_cmd
     httpattack_args = parse_args(
-        ['--httpattack', '-e', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd', '-6', '-d', 'domain', '-i',
+        ['--httpattack', '-s', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd', '-6', '-d', 'domain', '-i',
          'eth0', '-l', 'hostlist.txt'])
     relay_cmd = create_ntlmrelayx_cmd(httpattack_args)
-    assert f'-t https://{httpattack_args.exchange_server}/EWS/Exchange.asmx' in relay_cmd
+    assert f'-t https://{httpattack_args.server}/EWS/Exchange.asmx' in relay_cmd
     assert '-6' in relay_cmd
     assert 'user' not in relay_cmd
     assert '2.2.2.2' not in relay_cmd
     assert 'eth0' not in relay_cmd
     hostlist_args = parse_args(
-        ['-e', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd', '-d', 'domain', '-i', 'eth0', '-l',
+        ['-s', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd', '-d', 'domain', '-i', 'eth0', '-l',
          'hostlist.txt'])
     relay_cmd = create_ntlmrelayx_cmd(hostlist_args)
     assert '-tf unsigned-smb-hosts.txt' in relay_cmd
@@ -65,7 +65,7 @@ def test_create_ntlmrelayx_cmd():
     assert 'eth0' not in relay_cmd
     assert '-6' not in relay_cmd
     targetfile_args = parse_args(
-        ['-e', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd', '-6', '-d', 'domain', '-i', 'eth0', '-tf',
+        ['-s', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd', '-6', '-d', 'domain', '-i', 'eth0', '-tf',
          'hostlist.txt'])
     relay_cmd = create_ntlmrelayx_cmd(targetfile_args)
     assert '-tf hostlist.txt' in relay_cmd
@@ -99,10 +99,10 @@ def test_start_mitm6():
 
 
 def test_start_printerbug():
-    args = parse_args(['--printerbug', '-e', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
+    args = parse_args(['--remove-mic', '-s', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
     iface = get_iface()
     local_ip = get_local_ip(iface)
-    printerbug = start_printerbug(args.user, args.exchange_server, local_ip)
+    printerbug = start_printerbug(args, args.server, local_ip)
     assert int(printerbug.proc.pid)
     print('Scan PID: ' + str(printerbug.pid))
     assert 'DOMAIN/user:P@$/!s/:w0rd' in printerbug.cmd
@@ -116,7 +116,7 @@ def test_start_printerbug():
 
 
 def test_start_exchange_scan():
-    args = parse_args(['-e', '1.1.1.1', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
+    args = parse_args(['-s', '1.1.1.1', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
     scan = start_mic_scan(args)
     assert int(scan.proc.pid)
     print('Scan PID: ' + str(scan.pid))
@@ -128,13 +128,13 @@ def test_start_exchange_scan():
 
 
 def test_start_privexchange():
-    args = parse_args(['--privexchange', '-e', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
+    args = parse_args(['--privexchange', '-s', '1.1.1.1', '-dc', '2.2.2.2', '-u', 'DOMAIN/user:P@$/!s/:w0rd'])
     iface = get_iface()
     local_ip = get_local_ip(iface)
     privexchange = start_privexchange(args, local_ip)
     assert int(privexchange.proc.pid)
     print('Scan PID: ' + str(privexchange.pid))
-    assert "-p 'P@$/!s/:w0rd'" in privexchange.cmd
+    assert "-p P@$/!s/:w0rd" in privexchange.cmd
     assert '1.1.1.1' in privexchange.cmd
     assert '2.2.2.2' not in privexchange.cmd
     assert local_ip in privexchange.cmd

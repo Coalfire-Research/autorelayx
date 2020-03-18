@@ -20,8 +20,8 @@ def test_get_iface_and_ip():
 
 
 def test_parse_creds():
-    args = parse_args(['-u SOMETHING/username:P/:ss/:w0rd'])
-    dom, user, pw = parse_creds(args)
+    args = parse_args(['-u', 'SOMETHING/username:P/:ss/:w0rd'])
+    dom, user, pw = parse_creds(args.user)
     assert dom == "SOMETHING"
     assert user == "username"
     assert pw == "P/:ss/:w0rd"
