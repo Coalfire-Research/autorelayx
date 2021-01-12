@@ -15,7 +15,7 @@ with your local IP address (run `ip a` to find your local IP). The modified line
 
     cd autorelayx
     cp tools/PrivExchange/httpattack.py tools/impacket/impacket/examples/ntlmrelayx/attack/httpattack.py
-    sudo pipenv install
+    sudo pipenv install --three
     sudo pipenv shell
     cd tools/impacket
     pip install .
