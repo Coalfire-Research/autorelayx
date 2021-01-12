@@ -14,7 +14,7 @@ with your local IP address (run `ip a` to find your local IP). The modified line
 `attacker_url = 'http://192.168.1.30'` where 192.68.1.30 is your actual local IP. 
 
     cd autorelayx
-    cp tools/PrivExchange/httpattack.py tools/impacket/impacket/examples/ntlmrelayx/attack/httpattack.py
+    cp tools/PrivExchange/httpattack.py tools/impacket/impacket/examples/ntlmrelayx/attacks/httpattack.py
     sudo pipenv install --three
     sudo pipenv shell
     cd tools/impacket
